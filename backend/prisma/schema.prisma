@@ -12,3 +12,90 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  linkedAccounts LinkedAccounts[]
+}
+
+model LinkedAccounts {
+  id           String    @id @default(uuid())
+  userId       String
+  platform     Platform
+  externalId   String
+  displayName  String?
+  lastSyncedAt DateTime?
+  createdAt    DateTime  @default(now())
+
+  user              User               @relation(fields: [userId], references: [id])
+  steamGames        SteamGame[]
+  steamAchievements SteamAchievement[]
+
+  @@unique([userId, platform])
+}
+
+enum Platform {
+  STEAM
+  GENSHIN
+  HSR
+  ZZZ
+}
+
+model SteamGameCatalog {
+  appId           Int      @id
+  name            String
+  iconUrl         String?
+  headerUrl       String?
+  capsuleUrl      String?
+  libraryCoverUrl String?
+  lastFetched     DateTime @default(now())
+
+  steamGames          SteamGame[]
+  achievementCatalogs SteamAchievementCatalog[]
+}
+
+model SteamGame {
+  id              String   @id @default(uuid())
+  linkedAccountId String
+  appId           Int
+  playtimeForever Int
+  playtime2Weeks  Int?
+  lastSyncedAt    DateTime @default(now())
+
+  linkedAccount LinkedAccounts   @relation(fields: [linkedAccountId], references: [id])
+  catalogEntry  SteamGameCatalog @relation(fields: [appId], references: [appId])
+
+  @@unique([linkedAccountId, appId])
+}
+
+model SteamAchievementCatalog {
+  id          String  @id @default(uuid())
+  appId       Int
+  apiName     String
+  displayName String
+  description String?
+  iconUrl     String
+  iconGrayUrl String
+  hidden      Boolean @default(false)
+
+  catalogEntry SteamGameCatalog   @relation(fields: [appId], references: [appId])
+  achievements SteamAchievement[]
+
+  @@unique([appId, apiName])
+}
+
+model SteamAchievement {
+  id                   String    @id @default(uuid())
+  linkedAccountId      String
+  achievementCatalogId String
+  unlocked             Boolean   @default(false)
+  unlockedAt           DateTime?
+
+  linkedAccount      LinkedAccounts          @relation(fields: [linkedAccountId], references: [id])
+  achievementCatalog SteamAchievementCatalog @relation(fields: [achievementCatalogId], references: [id])
+
+  @@unique([linkedAccountId, achievementCatalogId])
+}
