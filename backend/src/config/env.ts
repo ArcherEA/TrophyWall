@@ -11,5 +11,6 @@ export const config = {
     steamApiKey: required('STEAM_API_KEY'),
     databaseUrl: required('DATABASE_URL'),
     redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
+    steamApiUrl: required('STEAM_API_BASE_URL'),
 };
 
