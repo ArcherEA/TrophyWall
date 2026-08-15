@@ -11,7 +11,7 @@ export default function App() {
   const [status, setStatus] = useState('');
 
   async function loadAccounts() {
-    try { setAccounts(await api.listAccounts()); } catch {}
+    try { setAccounts(await api.listAccounts()); } catch { /* accounts are optional on first load */ }
   }
 
   async function loadProfile() {
@@ -23,6 +23,7 @@ export default function App() {
     }
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is set after await, not synchronously
   useEffect(() => { loadAccounts(); loadProfile(); }, []);
 
   async function handleSwitch(id: string) {
