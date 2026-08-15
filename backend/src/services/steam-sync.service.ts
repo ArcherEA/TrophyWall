@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { steamClient } from '../steam/steam.client.js';
 import type { SteamOwnedGame, SteamStoreItemAssets } from '../steam/steam.types.js';
 
-const CATALOG_TTL_MS = 1000 * 60 * 60 ; //30 days
+const CATALOG_TTL_MS = 1000 * 60 * 60 * 24 * 30 ; //30 days
 const ASSET_BATCH_SIZE = 50;
 const STEAM_CDN = 'https://shared.akamai.steamstatic.com/store_item_assets/'; //steam/apps
 const MEDIA_CDN = 'https://media.steampowered.com/steamcommunity/public/images/apps';
