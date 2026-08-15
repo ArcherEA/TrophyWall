@@ -84,11 +84,18 @@ export interface SteamPlayerAchievement {
 export interface SteamStoreItem {
   id: number;
   name: string;
-  assets?: {
-    asset_url_format?: string;
-    header?: string;
-    library_capsule?: string;
-    library_hero?: string;
-    [key: string]: string | undefined;
-  };
+  assets?: SteamStoreItemAssets;
+}
+
+export interface SteamStoreItemAssets {
+  asset_url_format?: string;   // "steam/apps/<id>/${FILENAME}?t=..."
+  header?: string;
+  main_capsule?: string;
+  small_capsule?: string;
+  hero_capsule?: string;
+  library_capsule?: string;    // 600x900 portrait cover
+  library_capsule_2x?: string;
+  library_hero?: string;
+  community_icon?: string;     // hash (different URL scheme)
+  [key: string]: string | undefined;
 }
