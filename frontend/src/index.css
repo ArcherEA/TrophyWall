@@ -46,6 +46,21 @@ body {
   transform: translateX(130%);
 }
 
+/* stronger glow on hover */
+.trophy-card:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 22px -6px rgba(255, 255, 255, 0.32),
+    0 10px 24px -10px rgba(0, 0, 0, 0.75);
+}
+
+/* frosted-glass locked card */
+.trophy-locked {
+  background: linear-gradient(160deg, rgba(150, 180, 210, 0.06), rgba(255, 255, 255, 0.008));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
 /* thin, subtle scrollbars for the dark theme */
 * {
   scrollbar-width: thin;

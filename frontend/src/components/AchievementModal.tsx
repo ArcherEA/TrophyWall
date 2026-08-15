@@ -1,8 +1,14 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Game } from '../api/types';
+
+type Filter = 'all' | 'unlocked' | 'locked';
 
 export function AchievementModal({ game, onClose }: { game: Game; onClose: () => void }) {
   const { unlocked, total, items } = game.achievements;
+  const [filter, setFilter] = useState<Filter>('all');
+
+  const pct = total ? Math.round((unlocked / total) * 100) : 0;
+  const isPerfect = total > 0 && unlocked === total;
 
   // close on Escape
   useEffect(() => {
@@ -11,11 +17,22 @@ export function AchievementModal({ game, onClose }: { game: Game; onClose: () =>
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // unlocked trophies first
   const sorted = useMemo(
     () => [...items].sort((a, b) => Number(b.unlocked) - Number(a.unlocked)),
     [items],
   );
+
+  const shown = useMemo(() => {
+    if (filter === 'unlocked') return sorted.filter((a) => a.unlocked);
+    if (filter === 'locked') return sorted.filter((a) => !a.unlocked);
+    return sorted;
+  }, [sorted, filter]);
+
+  const tabs: { key: Filter; label: string; count: number }[] = [
+    { key: 'all', label: 'All', count: total },
+    { key: 'unlocked', label: 'Unlocked', count: unlocked },
+    { key: 'locked', label: 'Locked', count: total - unlocked },
+  ];
 
   return (
     <div
@@ -27,17 +44,44 @@ export function AchievementModal({ game, onClose }: { game: Game; onClose: () =>
         onClick={(e) => e.stopPropagation()}
       >
         {/* fixed header */}
-        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-white/15 p-4">
-          <div>
-            <h2 className="text-lg font-bold text-white">{game.name}</h2>
-            <p className="text-sm text-white/60">{unlocked} / {total} unlocked</p>
+        <header className="shrink-0 border-b border-white/15 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-white">{game.name}</h2>
+              <p className="text-sm text-white/60">
+                {unlocked} / {total} unlocked · {pct}%
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded px-2 py-1 text-white/60 transition hover:bg-white/10 hover:text-white"
+            >
+              ✕
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded px-2 py-1 text-white/60 transition hover:bg-white/10 hover:text-white"
-          >
-            ✕
-          </button>
+
+          {/* progress bar */}
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${pct}%`, background: isPerfect ? '#fbbf24' : '#fff' }}
+            />
+          </div>
+
+          {/* filter tabs */}
+          <div className="mt-3 flex gap-1">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setFilter(t.key)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                  filter === t.key ? 'bg-white/15 text-white' : 'text-white/50 hover:text-white/80'
+                }`}
+              >
+                {t.label} <span className="opacity-60">{t.count}</span>
+              </button>
+            ))}
+          </div>
         </header>
 
         {/* the display case (only this scrolls) */}
@@ -46,7 +90,7 @@ export function AchievementModal({ game, onClose }: { game: Game; onClose: () =>
         ) : (
           <div className="trophy-case overflow-y-auto p-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {sorted.map((a) => {
+              {shown.map((a) => {
                 const hiddenLocked = a.hidden === 1 && !a.unlocked;
                 return (
                   <div
@@ -54,19 +98,19 @@ export function AchievementModal({ game, onClose }: { game: Game; onClose: () =>
                     className={`group relative flex items-center gap-3 overflow-hidden rounded-lg border p-3 transition ${
                       a.unlocked
                         ? 'trophy-card border-white/15 hover:-translate-y-0.5'
-                        : 'border-white/5 bg-white/[0.02]'
+                        : 'trophy-locked border-white/5'
                     }`}
                   >
                     <img
                       src={a.icon ?? ''}
                       alt={a.displayName}
-                      className={`h-14 w-14 shrink-0 rounded ${a.unlocked ? '' : 'opacity-40'}`}
+                      className={`h-14 w-14 shrink-0 rounded ${a.unlocked ? '' : 'opacity-40 blur-[0.5px]'}`}
                     />
                     <div className="min-w-0">
-                      <p className={`truncate text-sm font-semibold ${a.unlocked ? 'text-white' : 'text-white/50'}`}>
+                      <p className={`truncate text-sm font-semibold ${a.unlocked ? 'text-white' : 'text-white/45'}`}>
                         {a.displayName}
                       </p>
-                      <p className="line-clamp-2 text-xs text-white/50">
+                      <p className="line-clamp-2 text-xs text-white/45">
                         {hiddenLocked ? 'Hidden achievement' : a.description}
                       </p>
                       {a.unlocked && a.unlockedAt && (
