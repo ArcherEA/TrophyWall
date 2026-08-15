@@ -27,6 +27,7 @@ model LinkedAccounts {
   platform     Platform
   externalId   String
   displayName  String?
+  avatarUrl    String?
   isActive     Boolean   @default(true)   // ← NEW
   lastSyncedAt DateTime?
   createdAt    DateTime  @default(now())

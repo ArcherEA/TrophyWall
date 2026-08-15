@@ -21,6 +21,19 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
     },
   });
 
+  // refresh profile (display name + avatar) — keeps it current and backfills older accounts
+  try {
+    const summary = await steamClient.getPlayerSummary(account.externalId);
+    if (summary) {
+      await prisma.linkedAccounts.update({
+        where: { id: account.id },
+        data: { displayName: summary.personaname, avatarUrl: summary.avatarfull },
+      });
+    }
+  } catch (err) {
+    console.error(`[sync] profile refresh failed for ${account.id}`, err);
+  }
+
   const games = await steamClient.getOwnedGames(account.externalId);
 
    // --- 1. one query: which of these games do we already have, and when fetched? ---

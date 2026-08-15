@@ -50,9 +50,10 @@ async function linkSteamAccount(steamId: string) {
     data: { 
       userId: user.id, 
       platform: 'STEAM', 
-      externalId: steamId, 
-      displayName: profile.personaname, 
-      isActive: true 
+      externalId: steamId,
+      displayName: profile.personaname,
+      avatarUrl: profile.avatarfull,
+      isActive: true
     },
   });
   await setActive(user.id, created.id); 

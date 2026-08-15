@@ -61,6 +61,7 @@ async function getSteamProfile() {
         account: {
             steamId: account.externalId,
             displayName: account.displayName,
+            avatar: account.avatarUrl,
             lastSyncedAt: account.lastSyncedAt,
         },
         games: gameList,
