@@ -27,6 +27,7 @@ model LinkedAccounts {
   platform     Platform
   externalId   String
   displayName  String?
+  isActive     Boolean   @default(true)   // ← NEW
   lastSyncedAt DateTime?
   createdAt    DateTime  @default(now())
 
@@ -34,7 +35,7 @@ model LinkedAccounts {
   steamGames        SteamGame[]
   steamAchievements SteamAchievement[]
 
-  @@unique([userId, platform])
+  @@unique([userId, platform, externalId])
 }
 
 enum Platform {
