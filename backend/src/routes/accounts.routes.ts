@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { linkAccount } from "../controller/account.controller.js";
+import { linkAccount } from "../controllers/account.controller.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 
 const router = Router();

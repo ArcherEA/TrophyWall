@@ -45,6 +45,12 @@ async function linkSteamAccount(steamId: string) {
   });
 }
 
+async function getSteamAccountForCurrentUser() {
+  const user = await getOrCreateDevUser();   // v1 dev user; later: the authenticated user
+  return prisma.linkedAccounts.findUnique({
+    where: { userId_platform: { userId: user.id, platform: 'STEAM' } },
+  });
+}
 
 
-export const accountService = { linkSteamAccount };
+export const accountService = { linkSteamAccount, getSteamAccountForCurrentUser };
