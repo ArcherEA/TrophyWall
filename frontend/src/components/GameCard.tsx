@@ -5,11 +5,14 @@ export function GameCard({ game, onClick }: { game: Game; onClick: () => void })
   const cover = game.images.libraryCover ?? game.images.header ?? game.images.capsule;
   const pct = game.achievements.percent;
   const hours = Math.round(game.playtimeForever / 60);
+  const isPlatinum = pct === 100;
 
   return (
     <button
       onClick={onClick}
-      className="group relative aspect-[2/3] overflow-hidden rounded-md bg-black ring-1 ring-white/15 transition duration-200 hover:-translate-y-1 hover:ring-2 hover:ring-white/80"
+      className={`group relative aspect-[2/3] overflow-hidden rounded-md bg-black transition duration-200 hover:-translate-y-1 ${
+        isPlatinum ? 'platinum' : 'ring-1 ring-white/15 hover:ring-2 hover:ring-white/80'
+      }`}
     >
       {cover ? (
         <img
