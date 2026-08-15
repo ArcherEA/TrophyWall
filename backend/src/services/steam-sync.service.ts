@@ -168,7 +168,22 @@ async function refreshAchievementCatalog(appId: number) {
   const schema = await steamClient.getSchemaForGame(String(appId));
   const defs = schema?.availableGameStats?.achievements ?? [];
 
+  // global rarity % (shared, per-achievement) — keyed by apiName; may fail for some games
+  let rarity = new Map<string, number>();
+  try {
+    const globals = await steamClient.getGlobalAchievementPercentages(String(appId));
+    // Steam returns `percent` as a string → coerce, and drop anything non-numeric
+    rarity = new Map(
+      globals
+        .map((g) => [g.name, Number(g.percent)] as const)
+        .filter(([, p]) => Number.isFinite(p)),
+    );
+  } catch (err) {
+    console.error(`[sync] global % fetch failed for app ${appId}`, err);
+  }
+
   for (const def of defs) {
+    const globalPercent = rarity.get(def.name) ?? null;
     await prisma.steamAchievementCatalog.upsert({
       where: {appId_apiName: {appId, apiName: def.name}},
       create: {
@@ -179,6 +194,7 @@ async function refreshAchievementCatalog(appId: number) {
         iconUrl: def.icon,
         iconGrayUrl: def.icongray,
         hidden: def.hidden === 1,
+        globalPercent,
       },
       update: {
         displayName: def.displayName,
@@ -186,6 +202,7 @@ async function refreshAchievementCatalog(appId: number) {
         iconUrl: def.icon,
         iconGrayUrl: def.icongray,
         hidden: def.hidden === 1,
+        globalPercent,
       },
     });
   }

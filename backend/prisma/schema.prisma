@@ -81,6 +81,7 @@ model SteamAchievementCatalog {
   iconUrl     String
   iconGrayUrl String
   hidden      Boolean @default(false)
+  globalPercent Float? // global rarity % — fraction of all players who unlocked it
 
   catalogEntry SteamGameCatalog   @relation(fields: [appId], references: [appId])
   achievements SteamAchievement[]

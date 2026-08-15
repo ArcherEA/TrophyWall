@@ -49,6 +49,7 @@ async function getSteamProfile() {
                 description: a.achievementCatalog.description,
                 icon: a.unlocked ? a.achievementCatalog.iconUrl : a.achievementCatalog.iconGrayUrl,
                 hidden: a.achievementCatalog.hidden,
+                globalPercent: a.achievementCatalog.globalPercent,
                 unlocked: a.unlocked,
                 unlockedAt: a.unlockedAt,
                 })),
