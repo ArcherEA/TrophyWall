@@ -1,18 +1,11 @@
-import { error } from 'console';
 import { prisma } from '../lib/prisma.js';
 import { steamClient } from '../steam/steam.client.js';
+import { assetUrl } from '../steam/asset-url.js';
 import type { SteamOwnedGame, SteamStoreItemAssets } from '../steam/steam.types.js';
 
 const CATALOG_TTL_MS = 1000 * 60 * 60 * 24 * 30 ; //30 days
 const ASSET_BATCH_SIZE = 50;
-const STEAM_CDN = 'https://shared.akamai.steamstatic.com/store_item_assets/'; //steam/apps
 const MEDIA_CDN = 'https://media.steampowered.com/steamcommunity/public/images/apps';
-
-function assetUrl(format: string | undefined, filename: string | undefined): string | null {
-  if (!format || !filename) return null;
-  // format contains the literal "${FILENAME}" placeholder
-  return `${STEAM_CDN}/${format.replace('${FILENAME}', filename)}`;
-}
 
 async function syncAccount(linkedAccountId: string, onProgress?: (done: number, total: number) => void,) {
   const account = await prisma.linkedAccounts.findUniqueOrThrow({
@@ -66,7 +59,7 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
       synced++;
     } catch (err) {
        // one bad game (private, no stats, transient error) must not kill the whole sync
-      error(`[sync] failed for app ${game.name} appId: ${game.appid}`, err);
+      console.error(`[sync] failed for app ${game.name} appId: ${game.appid}`, err);
     }
     onProgress?.(i + 1, games.length);   // report after each game
   }
