@@ -28,6 +28,7 @@ export interface Achievement {
   description: string | null;
   icon: string | null;              // already colored/gray from backend
   hidden: number;
+  globalPercent: number | null;     // global rarity % (fraction of players who unlocked it)
   unlocked: boolean;
   unlockedAt: string | null;
 }

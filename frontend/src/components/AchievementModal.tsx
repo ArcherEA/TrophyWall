@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Game } from '../api/types';
+import { getRarity, rarityMeta } from '../lib/rarity';
 
 type Filter = 'all' | 'unlocked' | 'locked';
 
@@ -92,6 +93,8 @@ export function AchievementModal({ game, onClose }: { game: Game; onClose: () =>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {shown.map((a) => {
                 const hiddenLocked = a.hidden === 1 && !a.unlocked;
+                const rarity = getRarity(a.globalPercent);
+                const rarityClass = a.unlocked && rarity && rarity !== 'common' ? `rarity-${rarity}` : '';
                 return (
                   <div
                     key={a.apiName}
@@ -99,7 +102,7 @@ export function AchievementModal({ game, onClose }: { game: Game; onClose: () =>
                       a.unlocked
                         ? 'trophy-card border-white/15 hover:-translate-y-0.5'
                         : 'trophy-locked border-white/5'
-                    }`}
+                    } ${rarityClass}`}
                   >
                     <img
                       src={a.icon ?? ''}
@@ -113,6 +116,11 @@ export function AchievementModal({ game, onClose }: { game: Game; onClose: () =>
                       <p className="line-clamp-2 text-xs text-white/45">
                         {hiddenLocked ? 'Hidden achievement' : a.description}
                       </p>
+                      {rarity && a.globalPercent != null && (
+                        <p className={`mt-0.5 text-[11px] font-semibold ${rarityMeta[rarity].text}`}>
+                          {rarityMeta[rarity].label} · {a.globalPercent.toFixed(1)}%
+                        </p>
+                      )}
                       {a.unlocked && a.unlockedAt && (
                         <p className="mt-0.5 text-[11px] text-white/40">
                           Unlocked {new Date(a.unlockedAt).toLocaleDateString()}
