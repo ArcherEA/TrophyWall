@@ -72,6 +72,7 @@ export default function App() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader
         displayName={profile?.account.displayName ?? null}
+        avatar={profile?.account.avatar ?? null}
         lastSyncedAt={profile?.account.lastSyncedAt ?? null}
         games={profile?.games ?? []}
         accounts={accounts}

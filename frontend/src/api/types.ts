@@ -1,5 +1,5 @@
 export interface Profile {
-    account: { steamId: string; displayName: string | null; lastSyncedAt: string| null };
+    account: { steamId: string; displayName: string | null; avatar: string | null; lastSyncedAt: string | null };
     games: Game[];
 }
 

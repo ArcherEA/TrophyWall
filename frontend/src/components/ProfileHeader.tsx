@@ -4,6 +4,7 @@ import { CompletionRing } from './CompletionRing';
 
 interface Props {
   displayName: string | null;
+  avatar: string | null;
   lastSyncedAt: string | null;
   games: Game[];
   accounts: LinkedAccount[];
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export function ProfileHeader({
-  displayName, lastSyncedAt, games, accounts, status, onSync, onLink, onSwitch,
+  displayName, avatar, lastSyncedAt, games, accounts, status, onSync, onLink, onSwitch,
 }: Props) {
   const [showAdd, setShowAdd] = useState(false);
   const [steamId, setSteamId] = useState('');
@@ -29,14 +30,26 @@ export function ProfileHeader({
     <header className="border-b border-white/15 bg-black">
       <div className="mx-auto max-w-7xl px-6 py-5">
         <div className="flex flex-wrap items-center gap-4">
-          <CompletionRing percent={overall} size={64} />
+          {/* avatar wrapped in the overall-completion ring */}
+          <div className="relative h-16 w-16 shrink-0">
+            <div className="absolute inset-[5px] overflow-hidden rounded-full bg-white/10">
+              {avatar ? (
+                <img src={avatar} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-2xl">🏆</div>
+              )}
+            </div>
+            <div className="absolute inset-0">
+              <CompletionRing percent={overall} size={64} fill={false} label={false} />
+            </div>
+          </div>
 
           <div className="min-w-0">
             <h1 className="text-2xl font-bold tracking-tight text-white">
               {displayName ?? 'Trophy Wall'}
             </h1>
             <p className="text-sm text-white/50">
-              {games.length} games · {hours.toLocaleString()}h played
+              {games.length} games · {hours.toLocaleString()}h played · {overall}% overall
               {lastSyncedAt && ` · synced ${new Date(lastSyncedAt).toLocaleDateString()}`}
             </p>
           </div>
