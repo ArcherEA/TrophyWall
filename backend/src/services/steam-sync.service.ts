@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma.js';
 import { steamClient } from '../steam/steam.client.js';
 import { isStale } from '../lib/ttl.js';
+import { logger } from '../lib/logger.js';
 import { buildImages, buildRarityMap, toUnlockedAt } from '../steam/sync-transforms.js';
 import type { SteamOwnedGame, SteamStoreItemAssets } from '../steam/steam.types.js';
 
@@ -24,7 +25,7 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
       });
     }
   } catch (err) {
-    console.error(`[sync] profile refresh failed for ${account.id}`, err);
+    logger.error({ err, linkedAccountId: account.id }, 'profile refresh failed');
   }
 
   const games = await steamClient.getOwnedGames(account.externalId);
@@ -56,7 +57,7 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
       synced++;
     } catch (err) {
        // one bad game (private, no stats, transient error) must not kill the whole sync
-      console.error(`[sync] failed for app ${game.name} appId: ${game.appid}`, err);
+      logger.error({ err, appId: game.appid, name: game.name }, 'game sync failed');
     }
     onProgress?.(i + 1, games.length);   // report after each game
   }
@@ -79,7 +80,7 @@ async function fetchAssetsBatched(appIds: number[]): Promise<Map<number, SteamSt
         if (item.assets) map.set(item.id, item.assets);
       }
     } catch (err) {
-      console.error('[sync] asset batch failed', err); // one bad batch ≠ kill the sync
+      logger.error({ err }, 'asset batch failed'); // one bad batch ≠ kill the sync
     }
   }
   return map;
@@ -167,7 +168,7 @@ async function refreshAchievementCatalog(appId: number) {
     const globals = await steamClient.getGlobalAchievementPercentages(String(appId));
     rarity = buildRarityMap(globals);
   } catch (err) {
-    console.error(`[sync] global % fetch failed for app ${appId}`, err);
+    logger.error({ err, appId }, 'global % fetch failed');
   }
 
   for (const def of defs) {
