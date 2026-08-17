@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from './api/client';
 import type { Profile, LinkedAccount, Platform } from './api/types';
-import { isGenshinProfile, isSteamProfile, isHSRProfile } from './api/types';
+import { isGenshinProfile, isSteamProfile, isHSRProfile, isZZZProfile } from './api/types';
 import { GameWall } from './components/GameWall';
 import { StatsBar } from './components/StatsBar';
 import { GenshinShowcase } from './components/GenshinShowcase';
 import { HSRShowcase } from './components/HSRShowcase';
+import { ZZZShowcase } from './components/ZZZShowcase';
 import { ProfileHeader } from './components/ProfileHeader';
 import { computeStats } from './lib/stats';
 
@@ -92,8 +93,12 @@ export default function App() {
     const s = computeStats(profile.games);
     overall = s.overall;
     subtitle = `${s.gameCount} games · ${s.hours.toLocaleString()}h played · ${s.overall}% overall`;
-  } else if (profile && (isGenshinProfile(profile) || isHSRProfile(profile))) {
-    subtitle = `${profile.characters.length} characters`;
+  } else if (
+    profile &&
+    (isGenshinProfile(profile) || isHSRProfile(profile) || isZZZProfile(profile))
+  ) {
+    const noun = isZZZProfile(profile) ? 'agents' : 'characters';
+    subtitle = `${profile.characters.length} ${noun}`;
   }
   if (profile?.account.lastSyncedAt) {
     subtitle += ` · synced ${new Date(profile.account.lastSyncedAt).toLocaleDateString()}`;
@@ -122,6 +127,8 @@ export default function App() {
           <GenshinShowcase characters={profile.characters} />
         ) : isHSRProfile(profile) ? (
           <HSRShowcase characters={profile.characters} />
+        ) : isZZZProfile(profile) ? (
+          <ZZZShowcase characters={profile.characters} />
         ) : profile.games.length > 0 ? (
           <>
             <StatsBar games={profile.games} />

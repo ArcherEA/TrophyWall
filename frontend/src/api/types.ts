@@ -1,4 +1,4 @@
-export type Platform = 'STEAM' | 'GENSHIN' | 'HSR';
+export type Platform = 'STEAM' | 'GENSHIN' | 'HSR' | 'ZZZ';
 
 interface AccountBase {
   externalId: string;
@@ -22,7 +22,12 @@ export interface HSRProfile {
   characters: HSRCharacter[];
 }
 
-export type Profile = SteamProfile | GenshinProfile | HSRProfile;
+export interface ZZZProfile {
+  account: AccountBase & { platform: 'ZZZ' };
+  characters: ZZZAgent[];
+}
+
+export type Profile = SteamProfile | GenshinProfile | HSRProfile | ZZZProfile;
 
 export function isSteamProfile(p: Profile): p is SteamProfile {
   return p.account.platform === 'STEAM';
@@ -32,6 +37,9 @@ export function isGenshinProfile(p: Profile): p is GenshinProfile {
 }
 export function isHSRProfile(p: Profile): p is HSRProfile {
   return p.account.platform === 'HSR';
+}
+export function isZZZProfile(p: Profile): p is ZZZProfile {
+  return p.account.platform === 'ZZZ';
 }
 
 export interface HSRStat {
@@ -109,6 +117,47 @@ export interface GenshinCharacter {
   weaponRarity: number | null;
   stats: Record<string, number | null>;
   artifacts: GenshinArtifact[];
+}
+
+export interface ZZZStat {
+  key: string; // raw property Name, e.g. "CritDmg"
+  label: string; // friendly label resolved on the backend
+  value: number; // final display number (percent as 48.0, flat as 2200)
+  isPercent: boolean;
+  rolls?: number; // substat upgrade count
+}
+
+export interface ZZZDisc {
+  id: string;
+  slot: number; // partition 1-6
+  setName: string;
+  rarity: string; // "S" | "A" | "B"
+  level: number;
+  iconUrl: string | null;
+  mainStat: ZZZStat;
+  subStats: ZZZStat[];
+}
+
+export interface ZZZAgent {
+  id: string;
+  avatarId: number;
+  name: string;
+  element: string | null; // Physical, Fire, Ice, Electric, Ether
+  profession: string | null; // Attack, Stun, Anomaly, Support, Defense, Rupture
+  rarity: string; // "S" | "A"
+  level: number;
+  mindscape: number; // 0-6
+  accentColor: string | null;
+  iconUrl: string | null;
+  wEngineName: string | null;
+  wEngineIconUrl: string | null;
+  wEngineLevel: number | null;
+  wEnginePhase: number | null;
+  wEngineRarity: string | null;
+  wEngineStatLabel: string | null; // advanced stat type, e.g. "CRIT Rate"
+  wEngineEffectName: string | null; // signature effect title
+  wEngineEffectDesc: string | null; // effect description at equipped phase
+  discs: ZZZDisc[];
 }
 
 export interface Game {
