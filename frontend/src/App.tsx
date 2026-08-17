@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api } from './api/client';
 import type { Profile, LinkedAccount, Platform } from './api/types';
-import { isGenshinProfile, isSteamProfile } from './api/types';
+import { isGenshinProfile, isSteamProfile, isHSRProfile } from './api/types';
 import { GameWall } from './components/GameWall';
 import { StatsBar } from './components/StatsBar';
 import { GenshinShowcase } from './components/GenshinShowcase';
+import { HSRShowcase } from './components/HSRShowcase';
 import { ProfileHeader } from './components/ProfileHeader';
 import { computeStats } from './lib/stats';
 
@@ -91,7 +92,7 @@ export default function App() {
     const s = computeStats(profile.games);
     overall = s.overall;
     subtitle = `${s.gameCount} games · ${s.hours.toLocaleString()}h played · ${s.overall}% overall`;
-  } else if (profile && isGenshinProfile(profile)) {
+  } else if (profile && (isGenshinProfile(profile) || isHSRProfile(profile))) {
     subtitle = `${profile.characters.length} characters`;
   }
   if (profile?.account.lastSyncedAt) {
@@ -119,6 +120,8 @@ export default function App() {
           </p>
         ) : isGenshinProfile(profile) ? (
           <GenshinShowcase characters={profile.characters} />
+        ) : isHSRProfile(profile) ? (
+          <HSRShowcase characters={profile.characters} />
         ) : profile.games.length > 0 ? (
           <>
             <StatsBar games={profile.games} />

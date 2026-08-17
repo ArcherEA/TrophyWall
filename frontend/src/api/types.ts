@@ -1,4 +1,4 @@
-export type Platform = 'STEAM' | 'GENSHIN';
+export type Platform = 'STEAM' | 'GENSHIN' | 'HSR';
 
 interface AccountBase {
   externalId: string;
@@ -17,13 +17,58 @@ export interface GenshinProfile {
   characters: GenshinCharacter[];
 }
 
-export type Profile = SteamProfile | GenshinProfile;
+export interface HSRProfile {
+  account: AccountBase & { platform: 'HSR' };
+  characters: HSRCharacter[];
+}
+
+export type Profile = SteamProfile | GenshinProfile | HSRProfile;
 
 export function isSteamProfile(p: Profile): p is SteamProfile {
   return p.account.platform === 'STEAM';
 }
 export function isGenshinProfile(p: Profile): p is GenshinProfile {
   return p.account.platform === 'GENSHIN';
+}
+export function isHSRProfile(p: Profile): p is HSRProfile {
+  return p.account.platform === 'HSR';
+}
+
+export interface HSRStat {
+  key: string; // raw StatPropertyType, e.g. "HPDelta" — labeled on the frontend
+  value: number;
+  isPercent: boolean;
+  name: string | null;
+}
+
+export interface HSRRelic {
+  id: string;
+  slot: string; // head | hands | body | feet | sphere | rope
+  setName: string;
+  rarity: number;
+  level: number;
+  iconUrl: string | null;
+  mainStat: HSRStat;
+  subStats: HSRStat[];
+}
+
+export interface HSRCharacter {
+  id: string;
+  avatarId: number;
+  name: string;
+  path: string | null;
+  element: string | null;
+  rarity: number;
+  level: number;
+  eidolon: number;
+  iconUrl: string | null;
+  lightConeName: string | null;
+  lightConeIconUrl: string | null;
+  lightConeLevel: number | null;
+  lightConeSuperimpose: number | null;
+  lightConeRarity: number | null;
+  stats: Record<string, number | null>;
+  relics: HSRRelic[];
 }
 
 export interface GenshinStat {

@@ -68,7 +68,7 @@ export function ProfileHeader({
               >
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
-                    {a.platform === 'GENSHIN' ? '⚔ ' : '🎮 '}
+                    {a.platform === 'GENSHIN' ? '⚔ ' : a.platform === 'HSR' ? '🚂 ' : '🎮 '}
                     {a.displayName ?? a.externalId}
                   </option>
                 ))}
@@ -98,13 +98,12 @@ export function ProfileHeader({
             >
               <option value="STEAM">Steam</option>
               <option value="GENSHIN">Genshin</option>
+              <option value="HSR">Star Rail</option>
             </select>
             <input
               value={externalId}
               onChange={(e) => setExternalId(e.target.value)}
-              placeholder={
-                platform === 'GENSHIN' ? 'Genshin UID (9 digits)' : 'Steam ID (17-digit)'
-              }
+              placeholder={platform === 'STEAM' ? 'Steam ID (17-digit)' : 'UID (9 digits)'}
               className="rounded border border-white/20 bg-black px-3 py-1.5 text-sm text-white placeholder-white/40 outline-none focus:border-white/60"
             />
             <button
