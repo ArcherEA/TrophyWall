@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Game, LinkedAccount } from '../api/types';
 import { CompletionRing } from './CompletionRing';
+import { computeStats } from '../lib/stats';
 
 interface Props {
   displayName: string | null;
@@ -20,10 +21,7 @@ export function ProfileHeader({
   const [showAdd, setShowAdd] = useState(false);
   const [steamId, setSteamId] = useState('');
 
-  const unlocked = games.reduce((s, g) => s + g.achievements.unlocked, 0);
-  const totalAch = games.reduce((s, g) => s + g.achievements.total, 0);
-  const overall = totalAch ? Math.round((unlocked / totalAch) * 100) : 0;
-  const hours = Math.round(games.reduce((s, g) => s + g.playtimeForever, 0) / 60);
+  const { gameCount, hours, overall } = computeStats(games);
   const active = accounts.find((a) => a.isActive);
 
   return (
@@ -49,7 +47,7 @@ export function ProfileHeader({
               {displayName ?? 'Trophy Wall'}
             </h1>
             <p className="text-sm text-white/50">
-              {games.length} games · {hours.toLocaleString()}h played · {overall}% overall
+              {gameCount} games · {hours.toLocaleString()}h played · {overall}% overall
               {lastSyncedAt && ` · synced ${new Date(lastSyncedAt).toLocaleDateString()}`}
             </p>
           </div>

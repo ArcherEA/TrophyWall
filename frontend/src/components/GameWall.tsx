@@ -2,25 +2,18 @@ import { useMemo, useState } from 'react';
 import type { Game } from '../api/types';
 import { GameCard } from './GameCard';
 import { AchievementModal } from './AchievementModal';
-
-type Sort = 'playtime' | 'completion' | 'name';
+import { sortAndFilter, type GameSort } from '../lib/game-filter';
 
 export function GameWall({ games }: { games: Game[] }) {
   const [selected, setSelected] = useState<Game | null>(null);
   const [q, setQ] = useState('');
-  const [sort, setSort] = useState<Sort>('playtime');
+  const [sort, setSort] = useState<GameSort>('playtime');
   const [onlyAch, setOnlyAch] = useState(false);
 
-  const shown = useMemo(() => {
-    let list = games;
-    if (q) list = list.filter((g) => g.name.toLowerCase().includes(q.toLowerCase()));
-    if (onlyAch) list = list.filter((g) => g.achievements.total > 0);
-    return [...list].sort((a, b) => {
-      if (sort === 'name') return a.name.localeCompare(b.name);
-      if (sort === 'completion') return (b.achievements.percent ?? -1) - (a.achievements.percent ?? -1);
-      return b.playtimeForever - a.playtimeForever;
-    });
-  }, [games, q, sort, onlyAch]);
+  const shown = useMemo(
+    () => sortAndFilter(games, { q, sort, onlyAch }),
+    [games, q, sort, onlyAch],
+  );
 
   return (
     <>
@@ -33,7 +26,7 @@ export function GameWall({ games }: { games: Game[] }) {
         />
         <select
           value={sort}
-          onChange={(e) => setSort(e.target.value as Sort)}
+          onChange={(e) => setSort(e.target.value as GameSort)}
           className="rounded border border-white/20 bg-black px-2 py-1.5 text-sm text-white outline-none focus:border-white/60"
         >
           <option value="playtime">Most played</option>
