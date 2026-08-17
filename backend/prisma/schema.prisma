@@ -36,6 +36,7 @@ model LinkedAccounts {
   steamGames        SteamGame[]
   steamAchievements SteamAchievement[]
   genshinCharacters GenshinCharacter[]
+  hsrCharacters     HSRCharacter[]
 
   @@unique([userId, platform, externalId])
 }
@@ -154,4 +155,49 @@ model GenshinArtifact {
   subStats           Json // [{ type, value }, ...]
 
   character GenshinCharacter @relation(fields: [genshinCharacterId], references: [id], onDelete: Cascade)
+}
+
+// --- HoYoverse: Honkai: Star Rail (resolved showcase snapshot from Enka.Network via starrail.js) ---
+
+model HSRCharacter {
+  id              String  @id @default(uuid())
+  linkedAccountId String
+  avatarId        Int
+  name            String
+  path            String? // The Hunt, Destruction, ...
+  element         String? // Quantum, Fire, Ice, ...
+  rarity          Int
+  level           Int
+  eidolon         Int     @default(0) // 0-6
+  iconUrl         String?
+
+  // equipped light cone (weapon)
+  lightConeName        String?
+  lightConeIconUrl     String?
+  lightConeLevel       Int?
+  lightConeSuperimpose Int?
+  lightConeRarity      Int?
+
+  // headline computed stats (HP, ATK, DEF, SPD, CR, CD)
+  stats     Json?
+  updatedAt DateTime @default(now())
+
+  linkedAccount LinkedAccounts @relation(fields: [linkedAccountId], references: [id])
+  relics        HSRRelic[]
+
+  @@unique([linkedAccountId, avatarId])
+}
+
+model HSRRelic {
+  id             String  @id @default(uuid())
+  hsrCharacterId String
+  slot           String // head | hands | body | feet | sphere | rope
+  setName        String
+  rarity         Int
+  level          Int
+  iconUrl        String?
+  mainStat       Json
+  subStats       Json
+
+  character HSRCharacter @relation(fields: [hsrCharacterId], references: [id], onDelete: Cascade)
 }
