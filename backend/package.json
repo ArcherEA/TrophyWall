@@ -14,7 +14,8 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "start:worker": "node dist/workers/steam-sync.worker.js",
-    "migrate:deploy": "prisma migrate deploy"
+    "migrate:deploy": "prisma migrate deploy",
+    "export:static": "tsx scripts/export-static.ts"
   },
   "keywords": [],
   "author": "",
