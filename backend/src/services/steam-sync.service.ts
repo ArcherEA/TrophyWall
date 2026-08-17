@@ -1,18 +1,11 @@
-import { error } from 'console';
 import { prisma } from '../lib/prisma.js';
 import { steamClient } from '../steam/steam.client.js';
+import { assetUrl } from '../steam/asset-url.js';
 import type { SteamOwnedGame, SteamStoreItemAssets } from '../steam/steam.types.js';
 
-const CATALOG_TTL_MS = 1000 * 60 * 60 ; //30 days
+const CATALOG_TTL_MS = 1000 * 60 * 60 * 24 * 30 ; //30 days
 const ASSET_BATCH_SIZE = 50;
-const STEAM_CDN = 'https://shared.akamai.steamstatic.com/store_item_assets/'; //steam/apps
 const MEDIA_CDN = 'https://media.steampowered.com/steamcommunity/public/images/apps';
-
-function assetUrl(format: string | undefined, filename: string | undefined): string | null {
-  if (!format || !filename) return null;
-  // format contains the literal "${FILENAME}" placeholder
-  return `${STEAM_CDN}/${format.replace('${FILENAME}', filename)}`;
-}
 
 async function syncAccount(linkedAccountId: string, onProgress?: (done: number, total: number) => void,) {
   const account = await prisma.linkedAccounts.findUniqueOrThrow({
@@ -20,6 +13,19 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
       id: linkedAccountId
     },
   });
+
+  // refresh profile (display name + avatar) — keeps it current and backfills older accounts
+  try {
+    const summary = await steamClient.getPlayerSummary(account.externalId);
+    if (summary) {
+      await prisma.linkedAccounts.update({
+        where: { id: account.id },
+        data: { displayName: summary.personaname, avatarUrl: summary.avatarfull },
+      });
+    }
+  } catch (err) {
+    console.error(`[sync] profile refresh failed for ${account.id}`, err);
+  }
 
   const games = await steamClient.getOwnedGames(account.externalId);
 
@@ -53,7 +59,7 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
       synced++;
     } catch (err) {
        // one bad game (private, no stats, transient error) must not kill the whole sync
-      error(`[sync] failed for app ${game.name} appId: ${game.appid}`, err);
+      console.error(`[sync] failed for app ${game.name} appId: ${game.appid}`, err);
     }
     onProgress?.(i + 1, games.length);   // report after each game
   }
@@ -168,7 +174,22 @@ async function refreshAchievementCatalog(appId: number) {
   const schema = await steamClient.getSchemaForGame(String(appId));
   const defs = schema?.availableGameStats?.achievements ?? [];
 
+  // global rarity % (shared, per-achievement) — keyed by apiName; may fail for some games
+  let rarity = new Map<string, number>();
+  try {
+    const globals = await steamClient.getGlobalAchievementPercentages(String(appId));
+    // Steam returns `percent` as a string → coerce, and drop anything non-numeric
+    rarity = new Map(
+      globals
+        .map((g) => [g.name, Number(g.percent)] as const)
+        .filter(([, p]) => Number.isFinite(p)),
+    );
+  } catch (err) {
+    console.error(`[sync] global % fetch failed for app ${appId}`, err);
+  }
+
   for (const def of defs) {
+    const globalPercent = rarity.get(def.name) ?? null;
     await prisma.steamAchievementCatalog.upsert({
       where: {appId_apiName: {appId, apiName: def.name}},
       create: {
@@ -179,6 +200,7 @@ async function refreshAchievementCatalog(appId: number) {
         iconUrl: def.icon,
         iconGrayUrl: def.icongray,
         hidden: def.hidden === 1,
+        globalPercent,
       },
       update: {
         displayName: def.displayName,
@@ -186,6 +208,7 @@ async function refreshAchievementCatalog(appId: number) {
         iconUrl: def.icon,
         iconGrayUrl: def.icongray,
         hidden: def.hidden === 1,
+        globalPercent,
       },
     });
   }

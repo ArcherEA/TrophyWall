@@ -49,6 +49,7 @@ async function getSteamProfile() {
                 description: a.achievementCatalog.description,
                 icon: a.unlocked ? a.achievementCatalog.iconUrl : a.achievementCatalog.iconGrayUrl,
                 hidden: a.achievementCatalog.hidden,
+                globalPercent: a.achievementCatalog.globalPercent,
                 unlocked: a.unlocked,
                 unlockedAt: a.unlockedAt,
                 })),
@@ -60,6 +61,7 @@ async function getSteamProfile() {
         account: {
             steamId: account.externalId,
             displayName: account.displayName,
+            avatar: account.avatarUrl,
             lastSyncedAt: account.lastSyncedAt,
         },
         games: gameList,
