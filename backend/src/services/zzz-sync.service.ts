@@ -41,7 +41,7 @@ async function syncZZZAccount(linkedAccountId: string) {
         }
       }
 
-      const { agent, discs } = transformZZZAgent(rawAgent, store, effect);
+      const { agent, discs } = transformZZZAgent(rawAgent, store, config.zzzImageBase, effect);
       currentAvatarIds.push(agent.avatarId);
 
       const saved = await prisma.zZZAgent.upsert({

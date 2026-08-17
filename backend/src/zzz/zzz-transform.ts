@@ -1,6 +1,5 @@
 import type { ZZZRawAgent, ZZZRawEquipment, ZZZRawStat } from './zzz.client.js';
 import type { ZZZStore, PropertyEntry } from './zzz.store.js';
-import { config } from '../config/env.js';
 
 // --- display maps -----------------------------------------------------------
 
@@ -187,9 +186,10 @@ function transformDisc(
 export function transformZZZAgent(
   raw: ZZZRawAgent,
   store: ZZZStore,
+  imageBase: string,
   effect?: ZZZWEngineEffect,
 ): ZZZAgentSnapshot {
-  const base = config.zzzImageBase;
+  const base = imageBase;
   const a = store.avatars[String(raw.Id)];
   const rawElement = a?.ElementTypes?.[0];
   const w = raw.Weapon;
