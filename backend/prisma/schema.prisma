@@ -37,6 +37,7 @@ model LinkedAccounts {
   steamAchievements SteamAchievement[]
   genshinCharacters GenshinCharacter[]
   hsrCharacters     HSRCharacter[]
+  zzzAgents         ZZZAgent[]
 
   @@unique([userId, platform, externalId])
 }
@@ -200,4 +201,53 @@ model HSRRelic {
   subStats       Json
 
   character HSRCharacter @relation(fields: [hsrCharacterId], references: [id], onDelete: Cascade)
+}
+
+// --- HoYoverse: Zenless Zone Zero (resolved showcase snapshot from Enka.Network raw API) ---
+// No library resolves ZZZ, so the sync fetches enka.network/api/zzz + Enka's static store
+// (avatars/weapons/equipments/property/locs) and resolves ids → names/icons/stats by hand.
+
+model ZZZAgent {
+  id              String  @id @default(uuid())
+  linkedAccountId String
+  avatarId        Int
+  name            String
+  element         String? // Physical, Fire, Ice, Electric, Ether
+  profession      String? // Attack, Stun, Anomaly, Support, Defense, Rupture
+  rarity          String // "S" | "A"
+  level           Int
+  mindscape       Int     @default(0) // Cinema / mindscape level 0-6
+  accentColor     String? // per-agent accent from store (card theming)
+  iconUrl         String?
+
+  // equipped W-Engine (embedded)
+  wEngineName       String?
+  wEngineIconUrl    String?
+  wEngineLevel      Int?
+  wEnginePhase      Int? // modification / superimpose 1-5
+  wEngineRarity     String?
+  wEngineStatLabel  String? // advanced stat type, e.g. "CRIT Rate"
+  wEngineEffectName String? // signature effect title
+  wEngineEffectDesc String? // effect description at the equipped phase
+
+  updatedAt DateTime @default(now())
+
+  linkedAccount LinkedAccounts @relation(fields: [linkedAccountId], references: [id])
+  discs         ZZZDriveDisc[]
+
+  @@unique([linkedAccountId, avatarId])
+}
+
+model ZZZDriveDisc {
+  id         String  @id @default(uuid())
+  zzzAgentId String
+  slot       Int // partition 1-6
+  setName    String
+  rarity     String // "S" | "A" | "B"
+  level      Int
+  iconUrl    String?
+  mainStat   Json // { key, label, value, isPercent }
+  subStats   Json // [{ key, label, value, isPercent, rolls }, ...]
+
+  agent ZZZAgent @relation(fields: [zzzAgentId], references: [id], onDelete: Cascade)
 }

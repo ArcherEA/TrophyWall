@@ -56,11 +56,11 @@ async function linkSteamAccount(steamId: string) {
   return created;
 }
 
-// Genshin + HSR share the same UID-based link flow (name/avatar filled on first sync)
-async function linkHoyoAccount(platform: 'GENSHIN' | 'HSR', uid: string) {
+// Genshin + HSR + ZZZ share the same UID-based link flow (name/avatar filled on first sync)
+async function linkHoyoAccount(platform: 'GENSHIN' | 'HSR' | 'ZZZ', uid: string) {
   const user = await getOrCreateDevUser();
-  if (!/^\d{9,10}$/.test(uid)) {
-    const err = new Error('Invalid UID (expected 9–10 digits)');
+  if (!/^\d{8,10}$/.test(uid)) {
+    const err = new Error('Invalid UID (expected 8–10 digits)');
     (err as any).status = 400;
     throw err;
   }

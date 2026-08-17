@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma.js';
 import { steamSyncService } from './steam-sync.service.js';
 import { genshinSyncService } from './genshin-sync.service.js';
 import { hsrSyncService } from './hsr-sync.service.js';
+import { zzzSyncService } from './zzz-sync.service.js';
 
 /**
  * The single place that routes a sync to the right per-platform service.
@@ -23,6 +24,8 @@ export async function dispatchSync(
       return genshinSyncService.syncGenshinAccount(linkedAccountId);
     case 'HSR':
       return hsrSyncService.syncHSRAccount(linkedAccountId);
+    case 'ZZZ':
+      return zzzSyncService.syncZZZAccount(linkedAccountId);
     default:
       throw new Error(`unsupported platform: ${platform}`);
   }

@@ -32,6 +32,15 @@ async function getProfile() {
     return { account: base, characters };
   }
 
+  if (account.platform === 'ZZZ') {
+    const characters = await prisma.zZZAgent.findMany({
+      where: { linkedAccountId: account.id },
+      include: { discs: true },
+      orderBy: [{ rarity: 'desc' }, { level: 'desc' }],
+    });
+    return { account: base, characters };
+  }
+
   // default: STEAM
   const [games, achievements] = await Promise.all([
     prisma.steamGame.findMany({
