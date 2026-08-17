@@ -12,4 +12,6 @@ export const config = {
   databaseUrl: required('DATABASE_URL'),
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
   steamApiUrl: required('STEAM_API_BASE_URL'),
+  // comma-separated allowed origins for CORS; unset ⇒ allow all (fine for local dev)
+  corsOrigin: process.env.CORS_ORIGIN,
 };

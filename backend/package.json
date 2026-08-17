@@ -12,7 +12,9 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "start:worker": "node dist/workers/steam-sync.worker.js",
+    "migrate:deploy": "prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
