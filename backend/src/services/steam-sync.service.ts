@@ -1,12 +1,11 @@
 import { prisma } from '../lib/prisma.js';
 import { steamClient } from '../steam/steam.client.js';
-import { assetUrl } from '../steam/asset-url.js';
 import { isStale } from '../lib/ttl.js';
+import { buildImages, buildRarityMap, toUnlockedAt } from '../steam/sync-transforms.js';
 import type { SteamOwnedGame, SteamStoreItemAssets } from '../steam/steam.types.js';
 
 const CATALOG_TTL_MS = 1000 * 60 * 60 * 24 * 30 ; //30 days
 const ASSET_BATCH_SIZE = 50;
-const MEDIA_CDN = 'https://media.steampowered.com/steamcommunity/public/images/apps';
 
 async function syncAccount(linkedAccountId: string, onProgress?: (done: number, total: number) => void,) {
   const account = await prisma.linkedAccounts.findUniqueOrThrow({
@@ -86,16 +85,6 @@ async function fetchAssetsBatched(appIds: number[]): Promise<Map<number, SteamSt
   return map;
 }
 
-function buildImages(appId: number, imgIconUrl: string | undefined, assets?: SteamStoreItemAssets) {
-  const fmt = assets?.asset_url_format;
-  return {
-    iconUrl: imgIconUrl ? `${MEDIA_CDN}/${appId}/${imgIconUrl}.jpg` : null,
-    headerUrl: assetUrl(fmt, assets?.header),
-    capsuleUrl: assetUrl(fmt, assets?.main_capsule),
-    libraryCoverUrl: assetUrl(fmt, assets?.library_capsule),
-  };
-}
-
 async function syncOneGame(
   linkedAccountId: string,
   steamId: string,
@@ -158,11 +147,11 @@ async function syncPlayerAchievements(linkedAccountId: string, steamId: string, 
         linkedAccountId,
         achievementCatalogId: catalog.id,
         unlocked: pa.achieved === 1,
-        unlockedAt: pa.unlocktime ? new Date(pa.unlocktime * 1000) : null,
+        unlockedAt: toUnlockedAt(pa.unlocktime),
       },
       update: {
         unlocked: pa.achieved === 1,
-        unlockedAt: pa.unlocktime ? new Date(pa.unlocktime * 1000) : null,
+        unlockedAt: toUnlockedAt(pa.unlocktime),
       },
     });
   }
@@ -176,12 +165,7 @@ async function refreshAchievementCatalog(appId: number) {
   let rarity = new Map<string, number>();
   try {
     const globals = await steamClient.getGlobalAchievementPercentages(String(appId));
-    // Steam returns `percent` as a string → coerce, and drop anything non-numeric
-    rarity = new Map(
-      globals
-        .map((g) => [g.name, Number(g.percent)] as const)
-        .filter(([, p]) => Number.isFinite(p)),
-    );
+    rarity = buildRarityMap(globals);
   } catch (err) {
     console.error(`[sync] global % fetch failed for app ${appId}`, err);
   }
