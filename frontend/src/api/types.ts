@@ -1,11 +1,69 @@
-export interface Profile {
-  account: {
-    steamId: string;
-    displayName: string | null;
-    avatar: string | null;
-    lastSyncedAt: string | null;
-  };
+export type Platform = 'STEAM' | 'GENSHIN';
+
+interface AccountBase {
+  externalId: string;
+  displayName: string | null;
+  avatar: string | null;
+  lastSyncedAt: string | null;
+}
+
+export interface SteamProfile {
+  account: AccountBase & { platform: 'STEAM' };
   games: Game[];
+}
+
+export interface GenshinProfile {
+  account: AccountBase & { platform: 'GENSHIN' };
+  characters: GenshinCharacter[];
+}
+
+export type Profile = SteamProfile | GenshinProfile;
+
+export function isSteamProfile(p: Profile): p is SteamProfile {
+  return p.account.platform === 'STEAM';
+}
+export function isGenshinProfile(p: Profile): p is GenshinProfile {
+  return p.account.platform === 'GENSHIN';
+}
+
+export interface GenshinStat {
+  key: string;
+  value: number;
+  isPercent: boolean;
+  name: string | null;
+}
+
+export interface GenshinArtifact {
+  id: string;
+  slot: string; // flower | plume | sands | goblet | circlet
+  setName: string;
+  rarity: number;
+  level: number;
+  iconUrl: string | null;
+  mainStat: GenshinStat;
+  subStats: GenshinStat[];
+}
+
+export interface GenshinCharacter {
+  id: string;
+  avatarId: number;
+  name: string;
+  element: string | null;
+  rarity: number;
+  level: number;
+  constellation: number;
+  friendship: number | null;
+  iconUrl: string | null;
+  talentNormal: number | null;
+  talentSkill: number | null;
+  talentBurst: number | null;
+  weaponName: string | null;
+  weaponIconUrl: string | null;
+  weaponLevel: number | null;
+  weaponRefinement: number | null;
+  weaponRarity: number | null;
+  stats: Record<string, number | null>;
+  artifacts: GenshinArtifact[];
 }
 
 export interface Game {
@@ -40,6 +98,7 @@ export interface Achievement {
 
 export interface LinkedAccount {
   id: string;
+  platform: Platform;
   externalId: string;
   displayName: string | null;
   isActive: boolean;

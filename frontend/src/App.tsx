@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from './api/client';
-import type { Profile, LinkedAccount } from './api/types';
+import type { Profile, LinkedAccount, Platform } from './api/types';
+import { isGenshinProfile, isSteamProfile } from './api/types';
 import { GameWall } from './components/GameWall';
 import { StatsBar } from './components/StatsBar';
+import { GenshinShowcase } from './components/GenshinShowcase';
 import { ProfileHeader } from './components/ProfileHeader';
+import { computeStats } from './lib/stats';
 
 export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -39,11 +42,11 @@ export default function App() {
     await loadProfile();
   }
 
-  async function handleLink(steamId: string) {
-    if (!steamId) return;
+  async function handleLink(platform: Platform, externalId: string) {
+    if (!externalId) return;
     setStatus('linking…');
     try {
-      await api.linkAccount(steamId);
+      await api.linkAccount(platform, externalId);
       setStatus('linked');
       await loadAccounts();
       await loadProfile();
@@ -81,13 +84,27 @@ export default function App() {
     }
   }
 
+  // per-platform header subtitle + optional completion ring
+  let subtitle = '';
+  let overall: number | undefined;
+  if (profile && isSteamProfile(profile)) {
+    const s = computeStats(profile.games);
+    overall = s.overall;
+    subtitle = `${s.gameCount} games · ${s.hours.toLocaleString()}h played · ${s.overall}% overall`;
+  } else if (profile && isGenshinProfile(profile)) {
+    subtitle = `${profile.characters.length} characters`;
+  }
+  if (profile?.account.lastSyncedAt) {
+    subtitle += ` · synced ${new Date(profile.account.lastSyncedAt).toLocaleDateString()}`;
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader
         displayName={profile?.account.displayName ?? null}
         avatar={profile?.account.avatar ?? null}
-        lastSyncedAt={profile?.account.lastSyncedAt ?? null}
-        games={profile?.games ?? []}
+        subtitle={subtitle}
+        overall={overall}
         accounts={accounts}
         status={status}
         onSync={handleSync}
@@ -96,19 +113,19 @@ export default function App() {
       />
 
       <main className="mx-auto max-w-7xl p-6">
-        {profile ? (
-          profile.games.length > 0 ? (
-            <>
-              <StatsBar games={profile.games} />
-              <GameWall games={profile.games} />
-            </>
-          ) : (
-            <p className="text-white/50">No games yet — add your Steam account and hit Sync.</p>
-          )
-        ) : (
+        {!profile ? (
           <p className="text-white/50">
             No account linked yet — click “＋ Add account” above to get started.
           </p>
+        ) : isGenshinProfile(profile) ? (
+          <GenshinShowcase characters={profile.characters} />
+        ) : profile.games.length > 0 ? (
+          <>
+            <StatsBar games={profile.games} />
+            <GameWall games={profile.games} />
+          </>
+        ) : (
+          <p className="text-white/50">No games yet — add your Steam account and hit Sync.</p>
         )}
       </main>
     </div>
