@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma.js';
 import { steamClient } from '../steam/steam.client.js';
 import { assetUrl } from '../steam/asset-url.js';
+import { isStale } from '../lib/ttl.js';
 import type { SteamOwnedGame, SteamStoreItemAssets } from '../steam/steam.types.js';
 
 const CATALOG_TTL_MS = 1000 * 60 * 60 * 24 * 30 ; //30 days
@@ -36,13 +37,10 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
   });
   const lastFetched = new Map(existing.map((c) => [c.appId, c.lastFetched]));
 
-  const isStale = (appId: number) => {
-    const lf = lastFetched.get(appId);
-    return !lf || Date.now() - lf.getTime() > CATALOG_TTL_MS;
-  };
+  const isStaleApp = (appId: number) => isStale(lastFetched.get(appId), CATALOG_TTL_MS);
 
   // --- 2. batch-fetch assets for the stale games only ---
-  const staleAppIds = games.map((g) => g.appid).filter(isStale);
+  const staleAppIds = games.map((g) => g.appid).filter(isStaleApp);
   const assetMap = await fetchAssetsBatched(staleAppIds);
 
   let synced = 0;
@@ -53,7 +51,7 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
         account.externalId,
         game,
         lastFetched.has(game.appid), // exists?
-        isStale(game.appid),         // stale?
+        isStaleApp(game.appid),      // stale?
         assetMap.get(game.appid),    // pre-fetched assets (may be undefined)
       );
       synced++;
