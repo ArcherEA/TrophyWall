@@ -35,6 +35,9 @@ model LinkedAccounts {
   user              User               @relation(fields: [userId], references: [id])
   steamGames        SteamGame[]
   steamAchievements SteamAchievement[]
+  genshinCharacters GenshinCharacter[]
+  hsrCharacters     HSRCharacter[]
+  zzzAgents         ZZZAgent[]
 
   @@unique([userId, platform, externalId])
 }
@@ -101,4 +104,150 @@ model SteamAchievement {
   achievementCatalog SteamAchievementCatalog @relation(fields: [achievementCatalogId], references: [id])
 
   @@unique([linkedAccountId, achievementCatalogId])
+}
+
+// --- HoYoverse: Genshin Impact (resolved showcase snapshot from Enka.Network) ---
+// No static catalog tables: enka-network-api resolves names/sets/icons at sync time,
+// so we store a denormalized, display-ready snapshot per showcased character.
+
+model GenshinCharacter {
+  id              String @id @default(uuid())
+  linkedAccountId String
+  avatarId        Int
+  name            String
+  element         String?
+  rarity          Int // 4 or 5 star
+  level           Int
+  constellation   Int // 0-6
+  friendship      Int?
+  iconUrl         String?
+
+  // talent levels
+  talentNormal Int?
+  talentSkill  Int?
+  talentBurst  Int?
+
+  // equipped weapon (embedded)
+  weaponName       String?
+  weaponIconUrl    String?
+  weaponLevel      Int?
+  weaponRefinement Int?
+  weaponRarity     Int?
+
+  // headline computed stats (HP, ATK, DEF, CR, CD, EM, ER, dmg bonus, ...)
+  stats     Json?
+  updatedAt DateTime @default(now())
+
+  linkedAccount LinkedAccounts    @relation(fields: [linkedAccountId], references: [id])
+  artifacts     GenshinArtifact[]
+
+  @@unique([linkedAccountId, avatarId])
+}
+
+model GenshinArtifact {
+  id                 String  @id @default(uuid())
+  genshinCharacterId String
+  slot               String // flower | plume | sands | goblet | circlet
+  setName            String
+  rarity             Int
+  level              Int
+  iconUrl            String?
+  mainStat           Json // { type, value }
+  subStats           Json // [{ type, value }, ...]
+
+  character GenshinCharacter @relation(fields: [genshinCharacterId], references: [id], onDelete: Cascade)
+}
+
+// --- HoYoverse: Honkai: Star Rail (resolved showcase snapshot from Enka.Network via starrail.js) ---
+
+model HSRCharacter {
+  id              String  @id @default(uuid())
+  linkedAccountId String
+  avatarId        Int
+  name            String
+  path            String? // The Hunt, Destruction, ...
+  element         String? // Quantum, Fire, Ice, ...
+  rarity          Int
+  level           Int
+  eidolon         Int     @default(0) // 0-6
+  iconUrl         String?
+
+  // equipped light cone (weapon)
+  lightConeName        String?
+  lightConeIconUrl     String?
+  lightConeLevel       Int?
+  lightConeSuperimpose Int?
+  lightConeRarity      Int?
+
+  // headline computed stats (HP, ATK, DEF, SPD, CR, CD)
+  stats     Json?
+  updatedAt DateTime @default(now())
+
+  linkedAccount LinkedAccounts @relation(fields: [linkedAccountId], references: [id])
+  relics        HSRRelic[]
+
+  @@unique([linkedAccountId, avatarId])
+}
+
+model HSRRelic {
+  id             String  @id @default(uuid())
+  hsrCharacterId String
+  slot           String // head | hands | body | feet | sphere | rope
+  setName        String
+  rarity         Int
+  level          Int
+  iconUrl        String?
+  mainStat       Json
+  subStats       Json
+
+  character HSRCharacter @relation(fields: [hsrCharacterId], references: [id], onDelete: Cascade)
+}
+
+// --- HoYoverse: Zenless Zone Zero (resolved showcase snapshot from Enka.Network raw API) ---
+// No library resolves ZZZ, so the sync fetches enka.network/api/zzz + Enka's static store
+// (avatars/weapons/equipments/property/locs) and resolves ids → names/icons/stats by hand.
+
+model ZZZAgent {
+  id              String  @id @default(uuid())
+  linkedAccountId String
+  avatarId        Int
+  name            String
+  element         String? // Physical, Fire, Ice, Electric, Ether
+  profession      String? // Attack, Stun, Anomaly, Support, Defense, Rupture
+  rarity          String // "S" | "A"
+  level           Int
+  mindscape       Int     @default(0) // Cinema / mindscape level 0-6
+  accentColor     String? // per-agent accent from store (card theming)
+  iconUrl         String?
+
+  // equipped W-Engine (embedded)
+  wEngineName       String?
+  wEngineIconUrl    String?
+  wEngineLevel      Int?
+  wEnginePhase      Int? // modification / superimpose 1-5
+  wEngineRarity     String?
+  wEngineStatLabel  String? // advanced stat type, e.g. "CRIT Rate"
+  wEngineEffectName String? // signature effect title
+  wEngineEffectDesc String? // effect description at the equipped phase
+
+  updatedAt DateTime @default(now())
+
+  linkedAccount LinkedAccounts @relation(fields: [linkedAccountId], references: [id])
+  discs         ZZZDriveDisc[]
+
+  @@unique([linkedAccountId, avatarId])
+}
+
+model ZZZDriveDisc {
+  id         String  @id @default(uuid())
+  zzzAgentId String
+  slot       Int // partition 1-6
+  setName    String
+  rarity     String // "S" | "A" | "B"
+  level      Int
+  iconUrl    String?
+  mainStat   Json // { key, label, value, isPercent }
+  subStats   Json // [{ key, label, value, isPercent, rolls }, ...]
+
+  agent ZZZAgent @relation(fields: [zzzAgentId], references: [id], onDelete: Cascade)
 }

@@ -1,16 +1,20 @@
 import { prisma } from '../lib/prisma.js';
 import { steamClient } from '../steam/steam.client.js';
-import { assetUrl } from '../steam/asset-url.js';
+import { isStale } from '../lib/ttl.js';
+import { logger } from '../lib/logger.js';
+import { buildImages, buildRarityMap, toUnlockedAt } from '../steam/sync-transforms.js';
 import type { SteamOwnedGame, SteamStoreItemAssets } from '../steam/steam.types.js';
 
-const CATALOG_TTL_MS = 1000 * 60 * 60 * 24 * 30 ; //30 days
+const CATALOG_TTL_MS = 1000 * 60 * 60 * 24 * 30; //30 days
 const ASSET_BATCH_SIZE = 50;
-const MEDIA_CDN = 'https://media.steampowered.com/steamcommunity/public/images/apps';
 
-async function syncAccount(linkedAccountId: string, onProgress?: (done: number, total: number) => void,) {
+async function syncAccount(
+  linkedAccountId: string,
+  onProgress?: (done: number, total: number) => void,
+) {
   const account = await prisma.linkedAccounts.findUniqueOrThrow({
     where: {
-      id: linkedAccountId
+      id: linkedAccountId,
     },
   });
 
@@ -24,25 +28,22 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
       });
     }
   } catch (err) {
-    console.error(`[sync] profile refresh failed for ${account.id}`, err);
+    logger.error({ err, linkedAccountId: account.id }, 'profile refresh failed');
   }
 
   const games = await steamClient.getOwnedGames(account.externalId);
 
-   // --- 1. one query: which of these games do we already have, and when fetched? ---
+  // --- 1. one query: which of these games do we already have, and when fetched? ---
   const existing = await prisma.steamGameCatalog.findMany({
     where: { appId: { in: games.map((g) => g.appid) } },
     select: { appId: true, lastFetched: true },
   });
   const lastFetched = new Map(existing.map((c) => [c.appId, c.lastFetched]));
 
-  const isStale = (appId: number) => {
-    const lf = lastFetched.get(appId);
-    return !lf || Date.now() - lf.getTime() > CATALOG_TTL_MS;
-  };
+  const isStaleApp = (appId: number) => isStale(lastFetched.get(appId), CATALOG_TTL_MS);
 
   // --- 2. batch-fetch assets for the stale games only ---
-  const staleAppIds = games.map((g) => g.appid).filter(isStale);
+  const staleAppIds = games.map((g) => g.appid).filter(isStaleApp);
   const assetMap = await fetchAssetsBatched(staleAppIds);
 
   let synced = 0;
@@ -53,20 +54,20 @@ async function syncAccount(linkedAccountId: string, onProgress?: (done: number, 
         account.externalId,
         game,
         lastFetched.has(game.appid), // exists?
-        isStale(game.appid),         // stale?
-        assetMap.get(game.appid),    // pre-fetched assets (may be undefined)
+        isStaleApp(game.appid), // stale?
+        assetMap.get(game.appid), // pre-fetched assets (may be undefined)
       );
       synced++;
     } catch (err) {
-       // one bad game (private, no stats, transient error) must not kill the whole sync
-      console.error(`[sync] failed for app ${game.name} appId: ${game.appid}`, err);
+      // one bad game (private, no stats, transient error) must not kill the whole sync
+      logger.error({ err, appId: game.appid, name: game.name }, 'game sync failed');
     }
-    onProgress?.(i + 1, games.length);   // report after each game
+    onProgress?.(i + 1, games.length); // report after each game
   }
 
   await prisma.linkedAccounts.update({
     where: { id: account.id },
-    data: { lastSyncedAt:new Date() },
+    data: { lastSyncedAt: new Date() },
   });
 
   return { gameSynced: synced, gamesTotal: games.length };
@@ -82,20 +83,10 @@ async function fetchAssetsBatched(appIds: number[]): Promise<Map<number, SteamSt
         if (item.assets) map.set(item.id, item.assets);
       }
     } catch (err) {
-      console.error('[sync] asset batch failed', err); // one bad batch ≠ kill the sync
+      logger.error({ err }, 'asset batch failed'); // one bad batch ≠ kill the sync
     }
   }
   return map;
-}
-
-function buildImages(appId: number, imgIconUrl: string | undefined, assets?: SteamStoreItemAssets) {
-  const fmt = assets?.asset_url_format;
-  return {
-    iconUrl: imgIconUrl ? `${MEDIA_CDN}/${appId}/${imgIconUrl}.jpg` : null,
-    headerUrl: assetUrl(fmt, assets?.header),
-    capsuleUrl: assetUrl(fmt, assets?.main_capsule),
-    libraryCoverUrl: assetUrl(fmt, assets?.library_capsule),
-  };
 }
 
 async function syncOneGame(
@@ -114,7 +105,8 @@ async function syncOneGame(
   await prisma.steamGame.upsert({
     where: { linkedAccountId_appId: { linkedAccountId, appId } },
     create: {
-      linkedAccountId, appId,
+      linkedAccountId,
+      appId,
       playtimeForever: game.playtime_forever,
       playtime2Weeks: game.playtime_2weeks ?? null,
     },
@@ -160,11 +152,11 @@ async function syncPlayerAchievements(linkedAccountId: string, steamId: string, 
         linkedAccountId,
         achievementCatalogId: catalog.id,
         unlocked: pa.achieved === 1,
-        unlockedAt: pa.unlocktime ? new Date(pa.unlocktime * 1000) : null,
+        unlockedAt: toUnlockedAt(pa.unlocktime),
       },
       update: {
         unlocked: pa.achieved === 1,
-        unlockedAt: pa.unlocktime ? new Date(pa.unlocktime * 1000) : null,
+        unlockedAt: toUnlockedAt(pa.unlocktime),
       },
     });
   }
@@ -178,20 +170,15 @@ async function refreshAchievementCatalog(appId: number) {
   let rarity = new Map<string, number>();
   try {
     const globals = await steamClient.getGlobalAchievementPercentages(String(appId));
-    // Steam returns `percent` as a string → coerce, and drop anything non-numeric
-    rarity = new Map(
-      globals
-        .map((g) => [g.name, Number(g.percent)] as const)
-        .filter(([, p]) => Number.isFinite(p)),
-    );
+    rarity = buildRarityMap(globals);
   } catch (err) {
-    console.error(`[sync] global % fetch failed for app ${appId}`, err);
+    logger.error({ err, appId }, 'global % fetch failed');
   }
 
   for (const def of defs) {
     const globalPercent = rarity.get(def.name) ?? null;
     await prisma.steamAchievementCatalog.upsert({
-      where: {appId_apiName: {appId, apiName: def.name}},
+      where: { appId_apiName: { appId, apiName: def.name } },
       create: {
         appId,
         apiName: def.name,
@@ -215,9 +202,9 @@ async function refreshAchievementCatalog(appId: number) {
 
   // mark this game's catalog as freshly fetched → resets the TTL
   await prisma.steamGameCatalog.update({
-    where: {appId},
-    data: {lastFetched: new Date()},
-  })
+    where: { appId },
+    data: { lastFetched: new Date() },
+  });
 }
 
 export const steamSyncService = { syncAccount };

@@ -1,25 +1,28 @@
 // src/workers/steam-sync.worker.ts
 import { Worker } from 'bullmq';
 import { createBullConnection, type SteamSyncJob } from '../lib/queue.js';
-import { steamSyncService } from '../services/steam-sync.service.js';
+import { dispatchSync } from '../services/sync-dispatch.js';
+import { logger } from '../lib/logger.js';
+
+const log = logger.child({ worker: 'steam-sync' });
 
 const worker = new Worker<SteamSyncJob>(
   'steam-sync',
   async (job) => {
     const { linkedAccountId } = job.data;
-    console.log(`[worker] syncing account ${linkedAccountId} (job ${job.id})`);
+    log.info({ jobId: job.id, linkedAccountId }, 'sync starting');
 
-    return steamSyncService.syncAccount(linkedAccountId, (done, total) => {
-      job.updateProgress({ done, total });   // stored in Redis, pollable
+    return dispatchSync(linkedAccountId, (done, total) => {
+      job.updateProgress({ done, total }); // stored in Redis, pollable
     });
   },
   {
     connection: createBullConnection(),
-    concurrency: 1,   // one account at a time; games inside are already sequential
+    concurrency: 1, // one account at a time; games inside are already sequential
   },
 );
 
-worker.on('completed', (job, result) => console.log(`[worker] done ${job.id}`, result));
-worker.on('failed', (job, err) => console.error(`[worker] failed ${job?.id}`, err));
+worker.on('completed', (job, result) => log.info({ jobId: job.id, result }, 'sync completed'));
+worker.on('failed', (job, err) => log.error({ jobId: job?.id, err }, 'sync failed'));
 
-console.log('[worker] steam-sync worker started');
+log.info('steam-sync worker started');

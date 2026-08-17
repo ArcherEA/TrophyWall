@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/coverage
+backend/src/generated
+backend/prisma/migrations
+**/pnpm-lock.yaml
+**/.agents
+**/.claude
+**/.windsurf
+**/.cursor

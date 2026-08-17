@@ -94,7 +94,8 @@ export function AchievementModal({ game, onClose }: { game: Game; onClose: () =>
               {shown.map((a) => {
                 const hiddenLocked = a.hidden === 1 && !a.unlocked;
                 const rarity = getRarity(a.globalPercent);
-                const rarityClass = a.unlocked && rarity && rarity !== 'common' ? `rarity-${rarity}` : '';
+                const rarityClass =
+                  a.unlocked && rarity && rarity !== 'common' ? `rarity-${rarity}` : '';
                 return (
                   <div
                     key={a.apiName}
@@ -110,14 +111,18 @@ export function AchievementModal({ game, onClose }: { game: Game; onClose: () =>
                       className={`h-14 w-14 shrink-0 rounded ${a.unlocked ? '' : 'opacity-40 blur-[0.5px]'}`}
                     />
                     <div className="min-w-0">
-                      <p className={`truncate text-sm font-semibold ${a.unlocked ? 'text-white' : 'text-white/45'}`}>
+                      <p
+                        className={`truncate text-sm font-semibold ${a.unlocked ? 'text-white' : 'text-white/45'}`}
+                      >
                         {a.displayName}
                       </p>
                       <p className="line-clamp-2 text-xs text-white/45">
                         {hiddenLocked ? 'Hidden achievement' : a.description}
                       </p>
                       {rarity && a.globalPercent != null && (
-                        <p className={`mt-0.5 text-[11px] font-semibold ${rarityMeta[rarity].text}`}>
+                        <p
+                          className={`mt-0.5 text-[11px] font-semibold ${rarityMeta[rarity].text}`}
+                        >
                           {rarityMeta[rarity].label} · {a.globalPercent.toFixed(1)}%
                         </p>
                       )}

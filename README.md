@@ -47,12 +47,14 @@ and basic display. Not yet deployed.
 ### Setup
 
 1. Clone the repo
+
    ```bash
    git clone https://github.com/<your-username>/trophy-wall.git
    cd trophy-wall
    ```
 
 2. Set up the backend
+
    ```bash
    cd backend
    pnpm install
@@ -62,6 +64,7 @@ and basic display. Not yet deployed.
    ```
 
 3. Set up the frontend (in a separate terminal)
+
    ```bash
    cd frontend
    pnpm install
@@ -85,4 +88,3 @@ and basic display. Not yet deployed.
 ## License
 
 <!-- e.g. MIT — add a LICENSE file if you want this to be reusable by others -->
-

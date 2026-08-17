@@ -1,25 +1,27 @@
-import type { Request,Response } from "express";
-import { accountService } from '../services/account.service.js'
-import { error } from "node:console";
+import type { Request, Response } from 'express';
+import { accountService } from '../services/account.service.js';
 
-export async function linkAccount(req: Request,res: Response){
-    const {steamId} = req.body;
+export async function linkAccount(req: Request, res: Response) {
+  const { platform, externalId } = req.body;
 
-    if (!steamId || typeof steamId !== 'string') {
-        return res.status(400).json({error:'steamId (string) is required'});
+  if (!externalId || typeof externalId !== 'string') {
+    return res.status(400).json({ error: 'externalId (string) is required' });
+  }
 
-    }
+  const account =
+    platform === 'GENSHIN' || platform === 'HSR' || platform === 'ZZZ'
+      ? await accountService.linkHoyoAccount(platform, externalId)
+      : await accountService.linkSteamAccount(externalId);
 
-    const account = await accountService.linkSteamAccount(steamId);
-    res.status(201).json(account);
+  res.status(201).json(account);
 }
 
 export async function listAccounts(_req: Request, res: Response) {
-  res.json(await accountService.listSteamAccounts());
+  res.json(await accountService.listAccounts());
 }
 
 export async function switchAccount(req: Request, res: Response) {
   const { linkedAccountId } = req.body;
   if (!linkedAccountId) return res.status(400).json({ error: 'linkedAccountId required' });
-  res.json(await accountService.switchSteamAccount(linkedAccountId));
+  res.json(await accountService.switchAccount(linkedAccountId));
 }

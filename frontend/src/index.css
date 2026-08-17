@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   color-scheme: dark;
@@ -16,8 +16,7 @@ body {
 /* --- achievement display case --- */
 .trophy-case {
   background:
-    radial-gradient(120% 55% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 55%),
-    #060606;
+    radial-gradient(120% 55% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 55%), #060606;
 }
 
 /* glass trophy card (unlocked) */
@@ -63,38 +62,54 @@ body {
 
 /* platinum: 100%-completed game card gets a gold frame + glow */
 .platinum {
-  box-shadow: 0 0 0 1.5px rgba(251, 191, 36, 0.7), 0 0 22px -4px rgba(251, 191, 36, 0.55);
+  box-shadow:
+    0 0 0 1.5px rgba(251, 191, 36, 0.7),
+    0 0 22px -4px rgba(251, 191, 36, 0.55);
 }
 .platinum:hover {
-  box-shadow: 0 0 0 2px rgba(251, 191, 36, 1), 0 0 32px -2px rgba(251, 191, 36, 0.78);
+  box-shadow:
+    0 0 0 2px rgba(251, 191, 36, 1),
+    0 0 32px -2px rgba(251, 191, 36, 0.78);
 }
 
 /* rarity tints for unlocked trophies (rarer = fancier glass) */
 .rarity-rare {
   border-color: rgba(96, 165, 250, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 16px -7px rgba(96, 165, 250, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 16px -7px rgba(96, 165, 250, 0.55);
 }
 .rarity-rare:hover {
   border-color: rgba(96, 165, 250, 0.9);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 26px -4px rgba(96, 165, 250, 0.75),
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 26px -4px rgba(96, 165, 250, 0.75),
     0 10px 24px -10px rgba(0, 0, 0, 0.75);
 }
 .rarity-epic {
   border-color: rgba(192, 132, 252, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 16px -7px rgba(192, 132, 252, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 16px -7px rgba(192, 132, 252, 0.55);
 }
 .rarity-epic:hover {
   border-color: rgba(192, 132, 252, 0.95);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 28px -4px rgba(192, 132, 252, 0.8),
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 28px -4px rgba(192, 132, 252, 0.8),
     0 10px 24px -10px rgba(0, 0, 0, 0.75);
 }
 .rarity-legendary {
   border-color: rgba(251, 191, 36, 0.55);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 18px -6px rgba(251, 191, 36, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 18px -6px rgba(251, 191, 36, 0.6);
 }
 .rarity-legendary:hover {
   border-color: rgba(251, 191, 36, 1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 0 30px -3px rgba(251, 191, 36, 0.85),
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 30px -3px rgba(251, 191, 36, 0.85),
     0 10px 24px -10px rgba(0, 0, 0, 0.75);
 }
 
