@@ -9,8 +9,8 @@ export async function linkAccount(req: Request, res: Response) {
   }
 
   const account =
-    platform === 'GENSHIN'
-      ? await accountService.linkGenshinAccount(externalId)
+    platform === 'GENSHIN' || platform === 'HSR'
+      ? await accountService.linkHoyoAccount(platform, externalId)
       : await accountService.linkSteamAccount(externalId);
 
   res.status(201).json(account);

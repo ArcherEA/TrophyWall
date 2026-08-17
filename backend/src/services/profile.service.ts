@@ -23,6 +23,15 @@ async function getProfile() {
     return { account: base, characters };
   }
 
+  if (account.platform === 'HSR') {
+    const characters = await prisma.hSRCharacter.findMany({
+      where: { linkedAccountId: account.id },
+      include: { relics: true },
+      orderBy: [{ rarity: 'desc' }, { level: 'desc' }],
+    });
+    return { account: base, characters };
+  }
+
   // default: STEAM
   const [games, achievements] = await Promise.all([
     prisma.steamGame.findMany({

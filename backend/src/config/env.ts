@@ -16,4 +16,6 @@ export const config = {
   corsOrigin: process.env.CORS_ORIGIN,
   // CDN base for Genshin icons (homdgcat is region-blocked; enka.network serves all types)
   genshinImageBase: process.env.GENSHIN_IMAGE_BASE ?? 'https://enka.network/ui',
+  // CDN base for HSR icons (enka.network serves char/light-cone/relic; github is region-blocked)
+  hsrImageBase: process.env.HSR_IMAGE_BASE ?? 'https://enka.network/ui/hsr/SpriteOutput',
 };

@@ -56,27 +56,25 @@ async function linkSteamAccount(steamId: string) {
   return created;
 }
 
-async function linkGenshinAccount(uid: string) {
+// Genshin + HSR share the same UID-based link flow (name/avatar filled on first sync)
+async function linkHoyoAccount(platform: 'GENSHIN' | 'HSR', uid: string) {
   const user = await getOrCreateDevUser();
   if (!/^\d{9,10}$/.test(uid)) {
-    const err = new Error('Invalid Genshin UID (expected 9–10 digits)');
+    const err = new Error('Invalid UID (expected 9–10 digits)');
     (err as any).status = 400;
     throw err;
   }
 
   const existing = await prisma.linkedAccounts.findUnique({
-    where: {
-      userId_platform_externalId: { userId: user.id, platform: 'GENSHIN', externalId: uid },
-    },
+    where: { userId_platform_externalId: { userId: user.id, platform, externalId: uid } },
   });
   if (existing) {
     await setActive(user.id, existing.id);
     return existing;
   }
 
-  // name + avatar are filled on the first sync (from Enka)
   const created = await prisma.linkedAccounts.create({
-    data: { userId: user.id, platform: 'GENSHIN', externalId: uid, isActive: true },
+    data: { userId: user.id, platform, externalId: uid, isActive: true },
   });
   await setActive(user.id, created.id);
   return created;
@@ -105,7 +103,7 @@ async function switchAccount(accountId: string) {
 
 export const accountService = {
   linkSteamAccount,
-  linkGenshinAccount,
+  linkHoyoAccount,
   getActiveAccount,
   listAccounts,
   switchAccount,
