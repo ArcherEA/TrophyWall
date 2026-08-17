@@ -69,8 +69,9 @@ function eidolonRank(c: AnyStat): number {
   );
 }
 
-/** Map a resolved starrail.js Character to our display-ready snapshot. */
-export function transformHSRCharacter(c: Character): HSRCharacterSnapshot {
+/** Map a resolved starrail.js Character to our display-ready snapshot.
+ *  `nickname` fills the Trailblazer's name (the library returns a "{NICKNAME}" template). */
+export function transformHSRCharacter(c: Character, nickname?: string): HSRCharacterSnapshot {
   const cd = c.characterData;
   const os: AnyStat = c.stats.overallStats;
   const base = config.hsrImageBase;
@@ -79,7 +80,7 @@ export function transformHSRCharacter(c: Character): HSRCharacterSnapshot {
   return {
     character: {
       avatarId: cd.id,
-      name: cd.name.get(LANG),
+      name: cd.name.get(LANG).replace('{NICKNAME}', nickname ?? 'Trailblazer'),
       path: cd.path?.name?.get(LANG) ?? null,
       element: cd.combatType?.name?.get(LANG) ?? null,
       rarity: cd.stars,

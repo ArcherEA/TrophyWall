@@ -28,7 +28,7 @@ async function syncHSRAccount(linkedAccountId: string) {
 
   for (const libChar of chars) {
     try {
-      const { character, relics } = transformHSRCharacter(libChar);
+      const { character, relics } = transformHSRCharacter(libChar, user.nickname);
       currentAvatarIds.push(character.avatarId);
 
       const saved = await prisma.hSRCharacter.upsert({
