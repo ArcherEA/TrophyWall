@@ -35,6 +35,7 @@ model LinkedAccounts {
   user              User               @relation(fields: [userId], references: [id])
   steamGames        SteamGame[]
   steamAchievements SteamAchievement[]
+  genshinCharacters GenshinCharacter[]
 
   @@unique([userId, platform, externalId])
 }
@@ -101,4 +102,56 @@ model SteamAchievement {
   achievementCatalog SteamAchievementCatalog @relation(fields: [achievementCatalogId], references: [id])
 
   @@unique([linkedAccountId, achievementCatalogId])
+}
+
+// --- HoYoverse: Genshin Impact (resolved showcase snapshot from Enka.Network) ---
+// No static catalog tables: enka-network-api resolves names/sets/icons at sync time,
+// so we store a denormalized, display-ready snapshot per showcased character.
+
+model GenshinCharacter {
+  id              String @id @default(uuid())
+  linkedAccountId String
+  avatarId        Int
+  name            String
+  element         String?
+  rarity          Int // 4 or 5 star
+  level           Int
+  constellation   Int // 0-6
+  friendship      Int?
+  iconUrl         String?
+
+  // talent levels
+  talentNormal Int?
+  talentSkill  Int?
+  talentBurst  Int?
+
+  // equipped weapon (embedded)
+  weaponName       String?
+  weaponIconUrl    String?
+  weaponLevel      Int?
+  weaponRefinement Int?
+  weaponRarity     Int?
+
+  // headline computed stats (HP, ATK, DEF, CR, CD, EM, ER, dmg bonus, ...)
+  stats     Json?
+  updatedAt DateTime @default(now())
+
+  linkedAccount LinkedAccounts    @relation(fields: [linkedAccountId], references: [id])
+  artifacts     GenshinArtifact[]
+
+  @@unique([linkedAccountId, avatarId])
+}
+
+model GenshinArtifact {
+  id                 String  @id @default(uuid())
+  genshinCharacterId String
+  slot               String // flower | plume | sands | goblet | circlet
+  setName            String
+  rarity             Int
+  level              Int
+  iconUrl            String?
+  mainStat           Json // { type, value }
+  subStats           Json // [{ type, value }, ...]
+
+  character GenshinCharacter @relation(fields: [genshinCharacterId], references: [id], onDelete: Cascade)
 }

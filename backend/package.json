@@ -43,6 +43,7 @@
     "bullmq": "^6.1.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "enka-network-api": "^5.1.1",
     "express": "^5.2.1",
     "ioredis": "^6.0.0",
     "pg": "^8.23.0",
