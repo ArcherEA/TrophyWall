@@ -14,4 +14,6 @@ export const config = {
   steamApiUrl: required('STEAM_API_BASE_URL'),
   // comma-separated allowed origins for CORS; unset ⇒ allow all (fine for local dev)
   corsOrigin: process.env.CORS_ORIGIN,
+  // CDN base for Genshin icons (homdgcat is region-blocked; enka.network serves all types)
+  genshinImageBase: process.env.GENSHIN_IMAGE_BASE ?? 'https://enka.network/ui',
 };
