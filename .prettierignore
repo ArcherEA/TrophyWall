@@ -3,6 +3,7 @@
 **/coverage
 backend/src/generated
 backend/prisma/migrations
+frontend/public/data
 **/pnpm-lock.yaml
 **/.agents
 **/.claude
