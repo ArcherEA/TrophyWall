@@ -3,14 +3,8 @@ import { steamSyncQueue } from '../lib/queue.js';
 import { accountService } from '../services/account.service.js';
 
 export async function syncSteam(req: Request, res: Response) {
-  const account = await accountService.getSteamAccountForCurrentUser();
-  if (!account) return res.status(404).json({ error: 'No Steam account linked' });
-  // const { linkedAccountId } = req.body;
-  // if ( !linkedAccountId || typeof linkedAccountId !== 'string' ) {
-  //     return res.status(400).json({
-  //         error: 'linkedAccountId (string) is required'
-  //     });
-  // }
+  const account = await accountService.getActiveAccount();
+  if (!account) return res.status(404).json({ error: 'No account linked' });
 
   const job = await steamSyncQueue.add(
     'sync-account',

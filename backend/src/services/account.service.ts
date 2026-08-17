@@ -11,24 +11,23 @@ async function getOrCreateDevUser() {
   });
 }
 
+// exactly one active account per user, across ALL platforms
 async function setActive(userId: string, accountId: string) {
-  // enforce single-active: deactivate all, then activate the target
   await prisma.$transaction([
-    prisma.linkedAccounts.updateMany({
-      where: { userId, platform: 'STEAM' },
-      data: { isActive: false },
-    }),
-    prisma.linkedAccounts.update({
-      where: { id: accountId },
-      data: { isActive: true },
-    }),
+    prisma.linkedAccounts.updateMany({ where: { userId }, data: { isActive: false } }),
+    prisma.linkedAccounts.update({ where: { id: accountId }, data: { isActive: true } }),
   ]);
+}
+
+function notFound(message: string) {
+  const err = new Error(message);
+  (err as any).status = 404;
+  return err;
 }
 
 async function linkSteamAccount(steamId: string) {
   const user = await getOrCreateDevUser();
 
-  // does THIS user already have this exact Steam ID linked? → reuse, skip API
   const existing = await prisma.linkedAccounts.findUnique({
     where: {
       userId_platform_externalId: { userId: user.id, platform: 'STEAM', externalId: steamId },
@@ -39,13 +38,9 @@ async function linkSteamAccount(steamId: string) {
     return existing;
   }
 
-  // otherwise validate + fetch from Steam
+  // validate + fetch profile from Steam
   const profile = await steamClient.getPlayerSummary(steamId);
-  if (!profile) {
-    const err = new Error(`Steam ID not found: ${steamId}`);
-    (err as any).status = 404;
-    throw err;
-  }
+  if (!profile) throw notFound(`Steam ID not found: ${steamId}`);
 
   const created = await prisma.linkedAccounts.create({
     data: {
@@ -61,35 +56,57 @@ async function linkSteamAccount(steamId: string) {
   return created;
 }
 
-async function getSteamAccountForCurrentUser() {
-  const user = await getOrCreateDevUser(); // v1 dev user; later: the authenticated user
-  return prisma.linkedAccounts.findFirst({
-    where: { userId: user.id, platform: 'STEAM', isActive: true },
+async function linkGenshinAccount(uid: string) {
+  const user = await getOrCreateDevUser();
+  if (!/^\d{9,10}$/.test(uid)) {
+    const err = new Error('Invalid Genshin UID (expected 9–10 digits)');
+    (err as any).status = 400;
+    throw err;
+  }
+
+  const existing = await prisma.linkedAccounts.findUnique({
+    where: {
+      userId_platform_externalId: { userId: user.id, platform: 'GENSHIN', externalId: uid },
+    },
   });
+  if (existing) {
+    await setActive(user.id, existing.id);
+    return existing;
+  }
+
+  // name + avatar are filled on the first sync (from Enka)
+  const created = await prisma.linkedAccounts.create({
+    data: { userId: user.id, platform: 'GENSHIN', externalId: uid, isActive: true },
+  });
+  await setActive(user.id, created.id);
+  return created;
 }
-async function listSteamAccounts() {
+
+async function getActiveAccount() {
+  const user = await getOrCreateDevUser(); // v1 dev user; later: the authenticated user
+  return prisma.linkedAccounts.findFirst({ where: { userId: user.id, isActive: true } });
+}
+
+async function listAccounts() {
   const user = await getOrCreateDevUser();
   return prisma.linkedAccounts.findMany({
-    where: { userId: user.id, platform: 'STEAM' },
+    where: { userId: user.id },
     orderBy: { createdAt: 'asc' },
   });
 }
 
-async function switchSteamAccount(accountId: string) {
+async function switchAccount(accountId: string) {
   const user = await getOrCreateDevUser();
   const acc = await prisma.linkedAccounts.findFirst({ where: { id: accountId, userId: user.id } });
-  if (!acc) {
-    const err = new Error('Account not found');
-    (err as any).status = 404;
-    throw err;
-  }
+  if (!acc) throw notFound('Account not found');
   await setActive(user.id, accountId);
   return acc;
 }
 
 export const accountService = {
   linkSteamAccount,
-  getSteamAccountForCurrentUser,
-  listSteamAccounts,
-  switchSteamAccount,
+  linkGenshinAccount,
+  getActiveAccount,
+  listAccounts,
+  switchAccount,
 };

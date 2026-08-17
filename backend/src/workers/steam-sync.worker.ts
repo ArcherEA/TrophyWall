@@ -1,7 +1,7 @@
 // src/workers/steam-sync.worker.ts
 import { Worker } from 'bullmq';
 import { createBullConnection, type SteamSyncJob } from '../lib/queue.js';
-import { steamSyncService } from '../services/steam-sync.service.js';
+import { dispatchSync } from '../services/sync-dispatch.js';
 import { logger } from '../lib/logger.js';
 
 const log = logger.child({ worker: 'steam-sync' });
@@ -12,7 +12,7 @@ const worker = new Worker<SteamSyncJob>(
     const { linkedAccountId } = job.data;
     log.info({ jobId: job.id, linkedAccountId }, 'sync starting');
 
-    return steamSyncService.syncAccount(linkedAccountId, (done, total) => {
+    return dispatchSync(linkedAccountId, (done, total) => {
       job.updateProgress({ done, total }); // stored in Redis, pollable
     });
   },
