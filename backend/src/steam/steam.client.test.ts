@@ -111,7 +111,9 @@ describe('getGlobalAchievementPercentages', () => {
 
 describe('getPlayerAchievements', () => {
   it('returns the playerstats object', async () => {
-    mockFetchOnce({ playerstats: { steamID: '1', gameName: 'CS2', achievements: [], success: true } });
+    mockFetchOnce({
+      playerstats: { steamID: '1', gameName: 'CS2', achievements: [], success: true },
+    });
     const stats = await steamClient.getPlayerAchievements('1', '730');
     expect(stats?.gameName).toBe('CS2');
     expect(calledUrl()).toContain('appid=730');

@@ -1,17 +1,15 @@
-import type { Request,Response } from "express";
-import { accountService } from '../services/account.service.js'
-import { error } from "node:console";
+import type { Request, Response } from 'express';
+import { accountService } from '../services/account.service.js';
 
-export async function linkAccount(req: Request,res: Response){
-    const {steamId} = req.body;
+export async function linkAccount(req: Request, res: Response) {
+  const { steamId } = req.body;
 
-    if (!steamId || typeof steamId !== 'string') {
-        return res.status(400).json({error:'steamId (string) is required'});
+  if (!steamId || typeof steamId !== 'string') {
+    return res.status(400).json({ error: 'steamId (string) is required' });
+  }
 
-    }
-
-    const account = await accountService.linkSteamAccount(steamId);
-    res.status(201).json(account);
+  const account = await accountService.linkSteamAccount(steamId);
+  res.status(201).json(account);
 }
 
 export async function listAccounts(_req: Request, res: Response) {

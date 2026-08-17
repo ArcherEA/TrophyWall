@@ -20,7 +20,7 @@ async function get<T>(path: string): Promise<T> {
 
 export interface SyncStatus {
   id: string;
-  state: string;                                   // waiting | active | completed | failed
+  state: string; // waiting | active | completed | failed
   progress: { done: number; total: number } | number | null;
   result?: { gamesSynced: number; gamesTotal: number };
   failedReason?: string;
@@ -33,5 +33,5 @@ export const api = {
   getProfile: () => get<Profile>('/profile'),
   listAccounts: () => get<LinkedAccount[]>('/accounts'),
   switchAccount: (linkedAccountId: string) =>
-  post<LinkedAccount>('/accounts/switch', { linkedAccountId }),   
+    post<LinkedAccount>('/accounts/switch', { linkedAccountId }),
 };

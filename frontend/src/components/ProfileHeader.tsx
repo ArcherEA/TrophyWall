@@ -16,7 +16,15 @@ interface Props {
 }
 
 export function ProfileHeader({
-  displayName, avatar, lastSyncedAt, games, accounts, status, onSync, onLink, onSwitch,
+  displayName,
+  avatar,
+  lastSyncedAt,
+  games,
+  accounts,
+  status,
+  onSync,
+  onLink,
+  onSwitch,
 }: Props) {
   const [showAdd, setShowAdd] = useState(false);
   const [steamId, setSteamId] = useState('');
@@ -60,7 +68,9 @@ export function ProfileHeader({
                 className="rounded border border-white/20 bg-black px-2 py-1.5 text-sm text-white outline-none focus:border-white/60"
               >
                 {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>{a.displayName ?? a.externalId}</option>
+                  <option key={a.id} value={a.id}>
+                    {a.displayName ?? a.externalId}
+                  </option>
                 ))}
               </select>
             )}
@@ -88,7 +98,11 @@ export function ProfileHeader({
               className="rounded border border-white/20 bg-black px-3 py-1.5 text-sm text-white placeholder-white/40 outline-none focus:border-white/60"
             />
             <button
-              onClick={() => { onLink(steamId); setSteamId(''); setShowAdd(false); }}
+              onClick={() => {
+                onLink(steamId);
+                setSteamId('');
+                setShowAdd(false);
+              }}
               className="rounded border border-white/20 bg-white/5 px-3 py-1.5 text-sm text-white transition hover:bg-white/15"
             >
               Link

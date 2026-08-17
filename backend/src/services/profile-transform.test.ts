@@ -17,7 +17,11 @@ function gameRow(appId: number, over: Partial<GameRow> = {}): GameRow {
   };
 }
 
-function achRow(appId: number, unlocked: boolean, over: Partial<AchievementRow['achievementCatalog']> = {}): AchievementRow {
+function achRow(
+  appId: number,
+  unlocked: boolean,
+  over: Partial<AchievementRow['achievementCatalog']> = {},
+): AchievementRow {
   return {
     unlocked,
     unlockedAt: unlocked ? new Date('2026-01-01') : null,
@@ -71,6 +75,11 @@ describe('buildGameList', () => {
   it('passes through globalPercent and maps images from the catalog', () => {
     const [g] = buildGameList([gameRow(1)], [achRow(1, true)]);
     expect(g.achievements.items[0].globalPercent).toBe(12.5);
-    expect(g.images).toEqual({ icon: 'icon', header: 'header', capsule: 'capsule', libraryCover: 'cover' });
+    expect(g.images).toEqual({
+      icon: 'icon',
+      header: 'header',
+      capsule: 'capsule',
+      libraryCover: 'cover',
+    });
   });
 });

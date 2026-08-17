@@ -15,7 +15,8 @@ export function sortAndFilter(games: Game[], { q, sort, onlyAch }: GameFilter): 
 
   return [...list].sort((a, b) => {
     if (sort === 'name') return a.name.localeCompare(b.name);
-    if (sort === 'completion') return (b.achievements.percent ?? -1) - (a.achievements.percent ?? -1);
+    if (sort === 'completion')
+      return (b.achievements.percent ?? -1) - (a.achievements.percent ?? -1);
     return b.playtimeForever - a.playtimeForever; // 'playtime'
   });
 }

@@ -24,9 +24,7 @@ export function buildImages(
  */
 export function buildRarityMap(globals: SteamGlobalAchievementPercent[]): Map<string, number> {
   return new Map(
-    globals
-      .map((g) => [g.name, Number(g.percent)] as const)
-      .filter(([, p]) => Number.isFinite(p)),
+    globals.map((g) => [g.name, Number(g.percent)] as const).filter(([, p]) => Number.isFinite(p)),
   );
 }
 

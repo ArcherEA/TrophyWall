@@ -11,7 +11,11 @@ export default function App() {
   const [status, setStatus] = useState('');
 
   async function loadAccounts() {
-    try { setAccounts(await api.listAccounts()); } catch { /* accounts are optional on first load */ }
+    try {
+      setAccounts(await api.listAccounts());
+    } catch {
+      /* accounts are optional on first load */
+    }
   }
 
   async function loadProfile() {
@@ -23,8 +27,11 @@ export default function App() {
     }
   }
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is set after await, not synchronously
-  useEffect(() => { loadAccounts(); loadProfile(); }, []);
+  // initial data load on mount — setState runs after await (async), not synchronously
+  useEffect(() => {
+    loadAccounts(); // eslint-disable-line react-hooks/set-state-in-effect
+    loadProfile();
+  }, []);
 
   async function handleSwitch(id: string) {
     await api.switchAccount(id);
@@ -52,12 +59,17 @@ export default function App() {
       const poll = setInterval(async () => {
         try {
           const s = await api.getSyncStatus(jobId);
-          const p = s.progress && typeof s.progress === 'object'
-            ? ` ${s.progress.done}/${s.progress.total}` : '';
+          const p =
+            s.progress && typeof s.progress === 'object'
+              ? ` ${s.progress.done}/${s.progress.total}`
+              : '';
           setStatus(`sync: ${s.state}${p}`);
           if (s.state === 'completed' || s.state === 'failed') {
             clearInterval(poll);
-            if (s.state === 'completed') { loadProfile(); loadAccounts(); }
+            if (s.state === 'completed') {
+              loadProfile();
+              loadAccounts();
+            }
           }
         } catch (e) {
           clearInterval(poll);
@@ -94,7 +106,9 @@ export default function App() {
             <p className="text-white/50">No games yet — add your Steam account and hit Sync.</p>
           )
         ) : (
-          <p className="text-white/50">No account linked yet — click “＋ Add account” above to get started.</p>
+          <p className="text-white/50">
+            No account linked yet — click “＋ Add account” above to get started.
+          </p>
         )}
       </main>
     </div>
